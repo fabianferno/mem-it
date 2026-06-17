@@ -74,9 +74,9 @@ export function AppNavigator() {
           photoUri={screen.photoUri}
           preset={getPreset(screen.presetId)!}
           onDone={async (result) => {
-            await writePerfLog(result.perf, result.caption);
             await gallery.add(result);
             setScreen({ name: "result", result });
+            writePerfLog(result.perf, result.caption).catch(() => {});
           }}
           onCancelled={() => setScreen({ name: "camera" })}
           onError={(message, retriable) => {

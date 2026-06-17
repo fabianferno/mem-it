@@ -12,8 +12,14 @@ export function SettingsScreen({ onBack, onCacheCleared }: { onBack: () => void;
 
   useEffect(() => {
     (async () => {
-      const info = await FileSystem.getInfoAsync(FileSystem.documentDirectory!);
-      setDocSize(info.exists ? info.size : null);
+      const dir = FileSystem.documentDirectory!;
+      const names = await FileSystem.readDirectoryAsync(dir);
+      let total = 0;
+      for (const n of names) {
+        const info = await FileSystem.getInfoAsync(dir + n);
+        if (info.exists && typeof (info as any).size === "number") total += (info as any).size;
+      }
+      setDocSize(total);
     })();
   }, []);
 

@@ -73,16 +73,18 @@ export function runPipeline(opts: {
     });
     activeCompletionRequestId = run.requestId;
     let caption = "";
-    for await (const tok of run.tokenStream) {
-      caption += tok;
-      onProgress("captioning", Math.min(95, caption.length)); // coarse; token stream has no % — show motion
+    try {
+      for await (const tok of run.tokenStream) {
+        caption += tok;
+        onProgress("captioning", Math.min(95, caption.length)); // coarse; token stream has no % — show motion
+      }
+    } finally {
+      activeCompletionRequestId = undefined;
+      t.captionEnd = Date.now();
+      onStage("unloading-vlm");
+      await unloadModel({ modelId: vlmId });
     }
     caption = caption.trim();
-    t.captionEnd = Date.now();
-    activeCompletionRequestId = undefined;
-
-    onStage("unloading-vlm");
-    await unloadModel({ modelId: vlmId });
     if (cancelled) throw cancelError();
 
     // ---- Stage 2: diffusion load + stylize ----
@@ -110,15 +112,18 @@ export function runPipeline(opts: {
       cfg_scale: preset.cfgScale,
       seed: -1,
     });
-    for await (const { step, totalSteps } of dz.progressStream) {
-      onProgress("stylizing", Math.round((step / totalSteps) * 100));
+    let png: Uint8Array;
+    try {
+      for await (const { step, totalSteps } of dz.progressStream) {
+        onProgress("stylizing", Math.round((step / totalSteps) * 100));
+      }
+      [png] = await dz.outputs;
+      t.stylizeEnd = Date.now();
+    } finally {
+      diffusionModelId = undefined;
+      onStage("unloading-diffusion");
+      await unloadModel({ modelId: sdId });
     }
-    const [png] = await dz.outputs;
-    t.stylizeEnd = Date.now();
-
-    onStage("unloading-diffusion");
-    await unloadModel({ modelId: sdId });
-    diffusionModelId = undefined;
 
     const id = `${t.pipelineStart}`;
     const stylizedUri = await writeStylizedPng(png, id);

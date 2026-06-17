@@ -21,6 +21,11 @@ export function DarkroomScreen({ photoUri, preset, onDone, onError, onCancelled 
   const [percent, setPercent] = useState(0);
   const handle = useRef<PipelineHandle | null>(null);
 
+  const onDoneRef = useRef(onDone);
+  const onErrorRef = useRef(onError);
+  const onCancelledRef = useRef(onCancelled);
+  useEffect(() => { onDoneRef.current = onDone; onErrorRef.current = onError; onCancelledRef.current = onCancelled; });
+
   useEffect(() => {
     const h = runPipeline({
       photoUri,
@@ -29,10 +34,10 @@ export function DarkroomScreen({ photoUri, preset, onDone, onError, onCancelled 
       onProgress: (_s, p) => setPercent(p),
     });
     handle.current = h;
-    h.promise.then(onDone).catch((err) => {
+    h.promise.then((r) => onDoneRef.current(r)).catch((err) => {
       const n = normalizeError(err);
-      if (n.kind === "cancelled") onCancelled();
-      else onError(n.message, n.retriable);
+      if (n.kind === "cancelled") onCancelledRef.current();
+      else onErrorRef.current(n.message, n.retriable);
     });
     return () => { h.cancel(); };
   }, [photoUri, preset]);
