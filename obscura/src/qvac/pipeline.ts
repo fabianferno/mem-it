@@ -40,6 +40,14 @@ export function runPipeline(opts: {
   const promise = (async (): Promise<PipelineResult> => {
     t.pipelineStart = Date.now();
 
+    // Guard: verify the captured photo file exists before starting inference
+    const info = await (await import("expo-file-system/legacy")).getInfoAsync(photoUri);
+    if (!info.exists) {
+      const e = new Error("Photo missing") as Error & { code: number };
+      e.code = 52413; // IMAGE_FILE_NOT_FOUND
+      throw e;
+    }
+
     // ---- Stage 1: VLM load + caption ----
     onStage("loading-vlm");
     t.vlmLoadStart = Date.now();
