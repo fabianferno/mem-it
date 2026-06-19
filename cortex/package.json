@@ -35,7 +35,8 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "test": "jest",
-    "postinstall": "patch-package"
+    "bundle:graph": "node scripts/bundle-graph-html.js",
+    "postinstall": "patch-package && node scripts/bundle-graph-html.js"
   },
   "private": true
 }

@@ -42,3 +42,6 @@ yarn-error.*
 
 # test toolchain symlink
 node_modules
+
+# generated: inlined 3d-force-graph page (run scripts/bundle-graph-html.js)
+src/graph3d/graphHtml.ts

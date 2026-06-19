@@ -1,0 +1,120 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <style>
+      html, body { margin: 0; height: 100%; background: #0A0A0B; overflow: hidden; }
+      #graph { width: 100vw; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="graph"></div>
+    <!-- 3d-force-graph UMD (bundles three.js) is inlined here at build time -->
+    <script>/*__FORCEGRAPH_LIB__*/</script>
+    <script>
+      (function () {
+        var TYPE_COLORS = {
+          person: "#FF5B4A",
+          concept: "#7AA2FF",
+          task: "#FF8A3D",
+          tech: "#46E5C8",
+          value: "#C792EA",
+          source: "#9A9AA0",
+        };
+
+        var data = { nodes: [], links: [] };
+        var ids = {}; // id -> true, to dedupe
+        var Graph = ForceGraph3D()(document.getElementById("graph"))
+          .backgroundColor("#0A0A0B")
+          .nodeRelSize(6)
+          .nodeOpacity(0.95)
+          .nodeResolution(16)
+          .nodeColor(function (n) { return TYPE_COLORS[n.type] || "#FFFFFF"; })
+          .nodeVal(function (n) { return 1 + (n.mentionCount || 1); })
+          .nodeLabel(function (n) { return n.label; })
+          .linkColor(function () { return "rgba(255,255,255,0.25)"; })
+          .linkOpacity(0.4)
+          .linkWidth(0.6)
+          .linkDirectionalParticles(2)
+          .linkDirectionalParticleWidth(1.2)
+          .onNodeClick(function (n) { post({ type: "nodeTap", id: n.id }); })
+          .graphData(data);
+
+        // Optional bloom for the glow, if the bundled build exposes a composer.
+        try {
+          if (Graph.postProcessingComposer && window.THREE) {
+            // left as a device-tuning hook; built-in bright nodes already read as glowing
+          }
+        } catch (e) {}
+
+        function post(msg) {
+          if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage(JSON.stringify(msg));
+        }
+
+        // Coalesce rapid adds (during LLM streaming) to one refresh per frame.
+        var dirty = false;
+        function scheduleRefresh() {
+          if (dirty) return;
+          dirty = true;
+          requestAnimationFrame(function () {
+            dirty = false;
+            Graph.graphData(data);
+          });
+        }
+
+        function addNode(n) {
+          if (!n || ids[n.id]) {
+            // bump mentionCount if it already exists
+            if (n && ids[n.id]) {
+              for (var i = 0; i < data.nodes.length; i++)
+                if (data.nodes[i].id === n.id) data.nodes[i].mentionCount = n.mentionCount || (data.nodes[i].mentionCount || 1) + 1;
+              scheduleRefresh();
+            }
+            return;
+          }
+          ids[n.id] = true;
+          data.nodes.push({ id: n.id, label: n.label, type: n.type, mentionCount: n.mentionCount || 1 });
+          scheduleRefresh();
+        }
+        function addEdge(e) {
+          if (!e) return;
+          data.links.push({ source: e.srcId, target: e.dstId, relation: e.relation });
+          scheduleRefresh();
+        }
+        function setGraph(g) {
+          data = { nodes: [], links: [] };
+          ids = {};
+          (g.nodes || []).forEach(addNode);
+          (g.edges || []).forEach(addEdge);
+          Graph.graphData(data);
+        }
+        function focusNode(id) {
+          var n = data.nodes.find(function (x) { return x.id === id; });
+          if (!n) return;
+          var d = 120;
+          var r = 1 + (n.x * n.x + n.y * n.y + n.z * n.z === 0 ? 0 : 1);
+          Graph.cameraPosition(
+            { x: (n.x || 0) * 1.4, y: (n.y || 0) * 1.4, z: (n.z || 0) + d },
+            n,
+            1000
+          );
+        }
+
+        // RN -> WebView entry point.
+        window.__cortex = {
+          handle: function (msg) {
+            try {
+              if (msg.type === "setGraph") setGraph(msg.payload);
+              else if (msg.type === "addNode") addNode(msg.payload);
+              else if (msg.type === "addEdge") addEdge(msg.payload);
+              else if (msg.type === "focusNode") focusNode(msg.payload);
+            } catch (e) { post({ type: "error", message: String(e) }); }
+          },
+        };
+
+        post({ type: "ready" });
+      })();
+    </script>
+  </body>
+</html>
