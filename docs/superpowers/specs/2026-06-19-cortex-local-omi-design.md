@@ -77,10 +77,7 @@ const id = await loadModel({
 const text = await transcribe({ modelId: id, audioChunk: wavPath });
 await unloadModel({ modelId: id });
 ```
-- **Model choice:** `WHISPER_SMALL_Q8_0` (accuracy/memory balance for batch transcription
-  after Stop). Fallback hot-swap: `WHISPER_BASE_Q8_0` (faster) or Parakeet
-  `PARAKEET_CTC_0_6B_Q8_0` (english-only, fast) — both already in the bundle, one-line
-  change.
+- **Model:** `WHISPER_SMALL_Q8_0`. One model, no fallbacks.
 
 ### 4.2 LLM extraction + summary — completion (streaming)
 ```ts
@@ -91,11 +88,11 @@ const run = completion({ modelId: id, history: [{ role: "user", content: EXTRACT
 for await (const tok of run.tokenStream) { /* incremental JSON parse → optimistic graph nodes */ }
 await unloadModel({ modelId: id });
 ```
-- **Model choice:** `LLAMA_3_2_1B_INST_Q4_0` (default — proven SDK headline model, ~0.8 GB,
-  reliable JSON). Opt-in quality upgrade: `QWEN3_4B_INST_Q4_K_M` if device memory allows.
+- **Model:** `LLAMA_3_2_1B_INST_Q4_0`. One model for the whole app (~0.8 GB, proven SDK
+  headline model, reliable JSON). No alternatives.
 - Two completions per session: (1) entity/relationship JSON (streamed for live graph),
-  (2) summary + action items. Or one combined call returning a single JSON; we default to
-  **two calls** for prompt clarity and to keep the streamed JSON small/parseable.
+  (2) summary + action items. Two calls keep each prompt clear and the streamed JSON small
+  and parseable.
 
 ### 4.3 Embeddings — embed
 ```ts
@@ -149,7 +146,7 @@ cortex/src/
     extract.ts          # extractEntities(transcript, onEntity) -> {nodes,edges}; streams
     summarize.ts        # summarize(transcript) -> {summary, actionItems[]}
     embed.ts            # embedText(text) -> Float32Array; embedMany(texts)
-    models.ts           # central model-constant config (swap Whisper/LLM here)
+    models.ts           # the three model constants in one place
   db/
     schema.ts           # table DDL + migrations
     meetings.ts         # CRUD for meetings + action_items
@@ -195,7 +192,7 @@ cortex/src/
 |---|---|
 | `transcribe` wants a 16 kHz WAV path; `expo-audio` defaults to `.m4a`/`.caf`. | Record directly to **PCM WAV 16 kHz mono** via `expo-audio` recording options if supported; otherwise convert on-device. The QVAC worker bundles `bare-ffmpeg` (its "built-in audio decoder") — confirm whether `transcribe` accepts m4a directly before adding a conversion step. Resolve in plan task 0. |
 | Small LLM emits malformed/partial JSON. | Strict, example-driven prompt; a **tolerant streaming JSON parser** that tolerates trailing/incomplete tokens for the live graph, plus a final strict parse on completion. On parse failure, fall back to a non-streamed retry with lower temperature. |
-| Memory on 6 GB device with 1024-dim FP16 embeddings + LLM. | Strict sequential load/unload (Obscura-proven). Default to 1B LLM. Never hold two models. |
+| Memory on 6 GB device with 1024-dim FP16 embeddings + LLM. | Strict sequential load/unload (Obscura-proven). Never hold two models. |
 | iOS background mic. | Out of scope — manual foreground sessions only (§2). |
 | WebView ↔ RN message volume during streaming. | Batch node/edge adds (coalesce per animation frame / per ~50 ms) to avoid bridge spam. |
 | Expo 56 audio module name. | Per `obscura/AGENTS.md`, verify against the v56 versioned docs (`expo-audio` vs `expo-av`) before coding — plan task 0. |
