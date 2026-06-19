@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "Obscura",
+    "slug": "obscura",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "io.obscura.app",
+      "entitlements": {
+        "com.apple.developer.kernel.increased-memory-limit": true
+      },
+      "infoPlist": {
+        "NSCameraUsageDescription": "Obscura uses the camera to capture photos you can restyle on-device.",
+        "NSPhotoLibraryAddUsageDescription": "Obscura saves your stylized photos to your library."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "@qvac/sdk/expo-plugin",
+      "expo-camera",
+      "expo-media-library",
+      ["expo-build-properties", { "ios": { "deploymentTarget": "16.4" } }]
+    ]
+  }
+}
