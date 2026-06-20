@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
+import { EmptyState } from "../ui/EmptyState";
 import { listAllActionItems, toggleActionItem, ActionItemWithMeeting } from "../db/meetings";
 import { useProcessing } from "../pipeline/sessionRunner";
 
@@ -41,17 +42,24 @@ export function TodosScreen() {
 
   return (
     <View style={styles.root}>
-      <Text style={styles.h1}>Todos</Text>
-      <ScrollView contentContainerStyle={{ padding: theme.space.md, gap: theme.space.sm }}>
-        {items.length === 0 && (
-          <Text style={styles.empty}>No action items yet. They appear here after you record meetings.</Text>
+      <Text style={styles.h1}>Act</Text>
+      <Text style={styles.subtitle}>
+        Action items pulled from your mems, gathered here to check off.
+      </Text>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, padding: theme.space.md, gap: theme.space.sm }}
+      >
+        {items.length === 0 ? (
+          <EmptyState>No action items yet. They appear here after you record mems.</EmptyState>
+        ) : (
+          <>
+            {todo.length > 0 && <Text style={styles.section}>To do · {todo.length}</Text>}
+            {todo.map(row)}
+
+            {done.length > 0 && <Text style={styles.section}>Completed · {done.length}</Text>}
+            {done.map(row)}
+          </>
         )}
-
-        {todo.length > 0 && <Text style={styles.section}>To do · {todo.length}</Text>}
-        {todo.map(row)}
-
-        {done.length > 0 && <Text style={styles.section}>Completed · {done.length}</Text>}
-        {done.map(row)}
       </ScrollView>
     </View>
   );
@@ -60,7 +68,13 @@ export function TodosScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.color.bg, paddingTop: theme.space.xl },
   h1: { color: theme.color.text, ...theme.type.display, paddingHorizontal: theme.space.md },
-  empty: { color: theme.color.textMuted, ...theme.type.body, marginTop: theme.space.lg, textAlign: "center" },
+  subtitle: {
+    color: theme.color.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    paddingHorizontal: theme.space.md,
+    marginTop: theme.space.xs,
+  },
   section: {
     color: theme.color.textMuted,
     ...theme.type.caption,

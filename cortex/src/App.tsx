@@ -17,7 +17,7 @@ export default function App() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.bg }}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <AppNavigator />
     </SafeAreaView>
   );

@@ -1,4 +1,4 @@
-// In-memory test shim for expo-sqlite. Implements just the SQL shapes Cortex
+// In-memory test shim for expo-sqlite. Implements just the SQL shapes mem-it
 // issues: CREATE TABLE IF NOT EXISTS, INSERT (explicit columns), SELECT
 // [cols|*] FROM t [WHERE col = ?] [ORDER BY col ASC|DESC], UPDATE t SET ...
 // WHERE col = ?, DELETE FROM t [WHERE col = ?]. BLOB params (Uint8Array) are

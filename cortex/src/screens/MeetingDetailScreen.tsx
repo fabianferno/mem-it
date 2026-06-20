@@ -4,6 +4,7 @@ import { theme } from "../theme";
 import { GlassCard } from "../ui/GlassCard";
 import { getMeeting, getActionItems, toggleActionItem, deleteMeeting } from "../db/meetings";
 import { useProcessing } from "../pipeline/sessionRunner";
+import { exportMeeting } from "../share/shareBundle";
 import type { ActionItem } from "../types";
 
 export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; onBack: () => void }) {
@@ -18,6 +19,14 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
   function toggle(it: ActionItem) {
     toggleActionItem(it.id, !it.done);
     setItems(getActionItems(meetingId));
+  }
+
+  async function share() {
+    try {
+      await exportMeeting(meetingId);
+    } catch (e: any) {
+      Alert.alert("Couldn't share", e?.message ?? "Unknown error");
+    }
   }
 
   function confirmDelete() {
@@ -40,11 +49,16 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
     <View style={styles.root}>
       <View style={styles.header}>
         <Pressable onPress={onBack} style={styles.back}>
-          <Text style={styles.backText}>‹ Meetings</Text>
+          <Text style={styles.backText}>‹ Mems</Text>
         </Pressable>
-        <Pressable onPress={confirmDelete} hitSlop={8}>
-          <Text style={styles.deleteText}>Delete</Text>
-        </Pressable>
+        <View style={styles.headerActions}>
+          <Pressable onPress={share} hitSlop={8}>
+            <Text style={styles.shareText}>Share</Text>
+          </Pressable>
+          <Pressable onPress={confirmDelete} hitSlop={8}>
+            <Text style={styles.deleteText}>Delete</Text>
+          </Pressable>
+        </View>
       </View>
       <ScrollView contentContainerStyle={{ padding: theme.space.md, gap: theme.space.md }}>
         <Text style={styles.h1}>{meeting.title}</Text>
@@ -92,6 +106,8 @@ const styles = StyleSheet.create({
   },
   back: { paddingVertical: theme.space.xs },
   backText: { color: theme.color.ink, ...theme.type.body, fontWeight: "600" },
+  headerActions: { flexDirection: "row", alignItems: "center", gap: theme.space.md },
+  shareText: { color: theme.color.accent, ...theme.type.body, fontWeight: "600" },
   deleteText: { color: theme.color.danger, ...theme.type.body },
   h1: { color: theme.color.text, ...theme.type.heading },
   label: { color: theme.color.textMuted, ...theme.type.caption, marginBottom: theme.space.xs },

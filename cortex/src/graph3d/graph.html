@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <style>
-      html, body { margin: 0; height: 100%; background: #16161A; overflow: hidden; }
+      html, body { margin: 0; height: 100%; background: #000000; overflow: hidden; }
       #graph { width: 100vw; height: 100vh; }
     </style>
   </head>
@@ -14,28 +14,29 @@
     <script>/*__FORCEGRAPH_LIB__*/</script>
     <script>
       (function () {
+        // Bright solids that glow on the black canvas; brand red carries the theme.
         var TYPE_COLORS = {
-          person: "#46E5C8",
-          concept: "#7AA2FF",
-          task: "#FF8A3D",
-          tech: "#C8F000",
-          value: "#E4FF6B",
-          source: "#BFBFB8",
+          person: "#2DD4BF",
+          concept: "#5B8DEF",
+          task: "#FB923C",
+          tech: "#E5E7EB",
+          value: "#A3E635",
+          source: "#A1A1AA",
         };
 
         var data = { nodes: [], links: [] };
         var ids = {}; // id -> true, to dedupe
         var Graph = ForceGraph3D()(document.getElementById("graph"))
-          .backgroundColor("#16161A")
+          .backgroundColor("#000000")
           .nodeRelSize(6)
-          .nodeOpacity(0.95)
+          .nodeOpacity(1)
           .nodeResolution(16)
-          .nodeColor(function (n) { return TYPE_COLORS[n.type] || "#FFFFFF"; })
+          .nodeColor(function (n) { return TYPE_COLORS[n.type] || "#E53659"; })
           .nodeVal(function (n) { return 1 + (n.mentionCount || 1); })
           .nodeLabel(function (n) { return n.label; })
-          .linkColor(function () { return "rgba(255,255,255,0.25)"; })
-          .linkOpacity(0.4)
-          .linkWidth(0.6)
+          .linkColor(function () { return "rgba(255,255,255,0.22)"; })
+          .linkOpacity(0.5)
+          .linkWidth(0.8)
           .linkDirectionalParticles(2)
           .linkDirectionalParticleWidth(1.2)
           .onNodeClick(function (n) { post({ type: "nodeTap", id: n.id }); })
@@ -102,7 +103,7 @@
         }
 
         // RN -> WebView entry point.
-        window.__cortex = {
+        window.__memit = {
           handle: function (msg) {
             try {
               if (msg.type === "setGraph") setGraph(msg.payload);

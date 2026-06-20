@@ -16,6 +16,21 @@ export function insertChunk(p: {
   return id;
 }
 
+/** All chunks for one meeting, with embeddings — used to export a shareable bundle. */
+export function getChunksByMeeting(
+  meetingId: string
+): { text: string; startMs: number; embedding: Float32Array }[] {
+  const rows = openDb().getAllSync(
+    `SELECT text, start_ms, embedding FROM chunks WHERE meeting_id = ?`,
+    [meetingId]
+  ) as { text: string; start_ms: number; embedding: Uint8Array }[];
+  return rows.map((r) => ({
+    text: r.text,
+    startMs: r.start_ms,
+    embedding: blobToF32(r.embedding),
+  }));
+}
+
 /** Brute-force cosine top-k over all stored transcript chunks. */
 export function searchChunks(
   queryVec: Float32Array,

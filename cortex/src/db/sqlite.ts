@@ -5,7 +5,7 @@ let _db: SQLite.SQLiteDatabase | null = null;
 
 export function openDb(): SQLite.SQLiteDatabase {
   if (!_db) {
-    _db = SQLite.openDatabaseSync("cortex.db");
+    _db = SQLite.openDatabaseSync("memit.db");
     migrate(_db);
   }
   return _db;

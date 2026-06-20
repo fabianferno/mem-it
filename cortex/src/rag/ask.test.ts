@@ -1,9 +1,41 @@
-import { ask } from "./ask";
+import { ask, parseToolCall } from "./ask";
 import { __resetDbForTests } from "../db/sqlite";
 import { insertChunk } from "../db/chunks";
 import { createMeeting } from "../db/meetings";
 
 beforeEach(() => __resetDbForTests());
+
+describe("parseToolCall (router)", () => {
+  test("routes task questions to list_todos", () => {
+    expect(parseToolCall('{"tool":"list_todos"}', "x")).toEqual({ tool: "list_todos" });
+  });
+
+  test("routes memory questions to search_memory with the model's query", () => {
+    expect(parseToolCall('{"tool":"search_memory","query":"starknet paymaster"}', "orig")).toEqual({
+      tool: "search_memory",
+      query: "starknet paymaster",
+    });
+  });
+
+  test("tolerates prose/fences around the JSON", () => {
+    const raw = 'Sure! ```json\n{"tool":"list_todos"}\n``` done';
+    expect(parseToolCall(raw, "x")).toEqual({ tool: "list_todos" });
+  });
+
+  test("defaults to memory search with the fallback query on junk", () => {
+    expect(parseToolCall("not json at all", "my question")).toEqual({
+      tool: "search_memory",
+      query: "my question",
+    });
+  });
+
+  test("falls back to the original question when search query is empty", () => {
+    expect(parseToolCall('{"tool":"search_memory","query":""}', "orig")).toEqual({
+      tool: "search_memory",
+      query: "orig",
+    });
+  });
+});
 
 test("returns a no-data fallback when nothing has been recorded", async () => {
   const r = await ask("what about starknet?");

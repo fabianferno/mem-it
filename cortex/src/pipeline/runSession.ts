@@ -6,6 +6,7 @@ import { withEmbedder } from "../qvac/embed";
 import { updateMeeting, addActionItem } from "../db/meetings";
 import { upsertNodeByLabel, insertEdge } from "../db/graph";
 import { insertChunk } from "../db/chunks";
+import { resetPerf, writePerfLog } from "../perf/perfLog";
 
 export interface PersistedNode {
   id: string;
@@ -68,6 +69,7 @@ export async function runSession(opts: RunSessionOpts): Promise<void> {
   };
 
   try {
+    resetPerf(); // capture per-model metrics for this standard demo run
     updateMeeting(meetingId, { status: "processing", audioUri: wavUri });
 
     // 1. Transcribe (Whisper)
@@ -116,6 +118,15 @@ export async function runSession(opts: RunSessionOpts): Promise<void> {
 
     updateMeeting(meetingId, { status: "done" });
     onStage("done");
+
+    // Persist a structured perf log of this run (model loads/unloads, TTFT,
+    // tokens/sec) to the document directory. Never fail the session over it.
+    try {
+      const uri = await writePerfLog();
+      console.log(`[perf] wrote performance log: ${uri}`);
+    } catch (e) {
+      console.warn("[perf] failed to write performance log", e);
+    }
   } catch (err) {
     if (err instanceof Cancelled) {
       onStage("idle");

@@ -40,11 +40,11 @@ export function BrainScreen() {
   return (
     <View style={styles.root}>
       <GraphWebView ref={graph} onReady={onReady} onNodeTap={onNodeTap} />
-      <Text style={styles.title}>Second brain</Text>
+      <Text style={styles.title}>Memhive</Text>
       {count === 0 && (
         <View style={styles.empty} pointerEvents="none">
           <Text style={styles.emptyText}>
-            Your brain is empty. Record a meeting and concepts will appear here.
+            Your memhive is empty. Record a mem and concepts will appear here.
           </Text>
         </View>
       )}
@@ -61,16 +61,16 @@ export function BrainScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: theme.color.graphBg },
+  root: { flex: 1, backgroundColor: theme.color.bg },
   title: {
     position: "absolute",
     top: theme.space.xl,
     left: theme.space.md,
-    color: theme.color.textOnDark,
+    color: theme.color.text,
     ...theme.type.display,
   },
   empty: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", padding: theme.space.xl },
-  emptyText: { color: "rgba(255,255,255,0.6)", ...theme.type.body, textAlign: "center" },
+  emptyText: { color: theme.color.textMuted, ...theme.type.body, textAlign: "center" },
   sheet: {
     position: "absolute",
     left: theme.space.md,

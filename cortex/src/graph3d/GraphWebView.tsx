@@ -1,6 +1,7 @@
 import React, { forwardRef, useImperativeHandle, useRef, useCallback } from "react";
 import { WebView, WebViewMessageEvent } from "react-native-webview";
 import { GRAPH_HTML } from "./graphHtml";
+import { theme } from "../theme";
 import type { GraphNode, GraphEdge } from "../types";
 
 export interface GraphHandle {
@@ -29,7 +30,7 @@ export const GraphWebView = forwardRef<GraphHandle, Props>(function GraphWebView
   const queue = useRef<string[]>([]);
 
   const send = useCallback((type: string, payload: unknown) => {
-    const js = `window.__cortex && window.__cortex.handle(${JSON.stringify({ type, payload })}); true;`;
+    const js = `window.__memit && window.__memit.handle(${JSON.stringify({ type, payload })}); true;`;
     if (readyRef.current) webRef.current?.injectJavaScript(js);
     else queue.current.push(js);
   }, []);
@@ -67,7 +68,7 @@ export const GraphWebView = forwardRef<GraphHandle, Props>(function GraphWebView
       originWhitelist={["*"]}
       source={{ html: GRAPH_HTML }}
       onMessage={onMessage}
-      style={{ flex: 1, backgroundColor: "#16161A" }}
+      style={{ flex: 1, backgroundColor: theme.color.graphBg }}
       javaScriptEnabled
       domStorageEnabled
       // WebGL needs hardware accel; keep the view opaque on a black canvas.

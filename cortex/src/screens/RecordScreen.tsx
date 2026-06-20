@@ -36,7 +36,7 @@ export function RecordScreen({
   useEffect(() => {
     (async () => {
       const perm = await requestRecordingPermissionsAsync();
-      if (!perm.granted) Alert.alert("Microphone needed", "Enable mic access to record meetings.");
+      if (!perm.granted) Alert.alert("Microphone needed", "Enable mic access to record mems.");
       await setAudioModeAsync({ playsInSilentMode: true, allowsRecording: true });
     })();
   }, []);

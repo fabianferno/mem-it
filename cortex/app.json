@@ -1,26 +1,28 @@
 {
   "expo": {
-    "name": "Cortex",
-    "slug": "cortex",
+    "name": "mem-it",
+    "slug": "mem-it",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "io.cortex.app",
+      "bundleIdentifier": "io.memit.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "Cortex records meetings on-device to transcribe and build your private second brain. Audio never leaves your phone."
+        "NSMicrophoneUsageDescription": "mem-it records mems on-device to transcribe and build your private second brain. Audio never leaves your phone."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0A0A0B",
+        "backgroundColor": "#000000",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
-      "permissions": ["RECORD_AUDIO"],
+      "permissions": [
+        "RECORD_AUDIO"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
@@ -29,7 +31,15 @@
     "plugins": [
       "@qvac/sdk/expo-plugin",
       "expo-audio",
-      ["expo-build-properties", { "ios": { "deploymentTarget": "16.4" } }]
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "deploymentTarget": "16.4"
+          }
+        }
+      ],
+      "expo-sharing"
     ]
   }
 }
