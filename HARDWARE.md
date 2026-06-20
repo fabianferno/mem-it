@@ -9,16 +9,17 @@ GTE-large embeddings) executes on the phone below; no inference is offloaded.
 
 | Field | Value |
 |---|---|
-| Device | Apple iPhone 14 Pro |
-| SoC | Apple A16 Bionic |
+| Device | Apple iPhone 14 Pro (`iPhone15,2`) |
+| SoC | Apple A16 Bionic (arm64e) |
 | CPU | 6-core (2 performance "Everest" + 4 efficiency "Sawtooth") |
 | GPU | Apple 5-core GPU |
 | Neural Engine | 16-core ANE |
 | RAM | 6 GB LPDDR5 |
-| Storage (total) | <!-- TODO: confirm on device, e.g. 128 GB / 256 GB --> |
-| Storage (free at demo) | <!-- TODO: confirm on device --> |
-| OS | iOS 16.4+ <!-- TODO: confirm exact build, e.g. iOS 17.x --> |
+| Storage (total) | <!-- TODO: confirm in Settings → General → iPhone Storage --> |
+| Storage (free at demo) | <!-- TODO: confirm in Settings → General → iPhone Storage --> |
+| OS | iOS 26.5 (build 23F77) |
 | App runtime | Expo SDK 56 / React Native 0.85 / Hermes |
+| Build / install | `expo run:ios` (debug), Xcode 26.1.1 |
 | QVAC SDK | @qvac/sdk 0.12.2 |
 
 ## Models resident (one at a time — sequential load → infer → unload)

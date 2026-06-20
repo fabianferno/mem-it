@@ -439,6 +439,10 @@ phone** — all inference runs through `@qvac/sdk`.
 - [x] Performance log instrumentation (`src/perf/perfLog.ts` → `memit-perf-*.json`)
 - [x] Build-in-Public content drafted (`BUILD_IN_PUBLIC.md`)
 - [x] README benchmark table scaffold (`cortex/README.md` — fill from device run)
+- [x] Submission write-up (`SUBMISSION.md` — one-liner, description, QVAC usage)
+- [x] Demo video script (`demo-script.md`)
+- [x] Build installed + running on iPhone 14 Pro (iOS 26.5)
+- [ ] **Record the demo video** following `demo-script.md` (≤5 min, YouTube unlisted)
 - [ ] **Performance log sample** from a real device run (commit under `evidence/`)
 - [ ] **Hardware/system-profiler screenshots** (commit under `evidence/`)
 - [ ] **Demo video** (YouTube unlisted, ≤5 min) — add link to submission form
