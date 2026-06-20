@@ -31,7 +31,7 @@ export function enableProfiler(): void {
 
 export async function writePerfLog(perf: PipelinePerf, caption: string): Promise<string> {
   const exported = profiler.exportJSON({ includeRecentEvents: true });
-  const payload = { obscuraPerf: perf, caption, profiler: exported };
+  const payload = { cortexPerf: perf, caption, profiler: exported };
   const uri = `${FileSystem.documentDirectory}perf-${perf.totalMs}-${exported.exportedAt}.json`;
   await FileSystem.writeAsStringAsync(uri, JSON.stringify(payload, null, 2));
   return uri;

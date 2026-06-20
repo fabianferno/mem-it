@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <style>
-      html, body { margin: 0; height: 100%; background: #0A0A0B; overflow: hidden; }
+      html, body { margin: 0; height: 100%; background: #16161A; overflow: hidden; }
       #graph { width: 100vw; height: 100vh; }
     </style>
   </head>
@@ -15,18 +15,18 @@
     <script>
       (function () {
         var TYPE_COLORS = {
-          person: "#FF5B4A",
+          person: "#46E5C8",
           concept: "#7AA2FF",
           task: "#FF8A3D",
-          tech: "#46E5C8",
-          value: "#C792EA",
-          source: "#9A9AA0",
+          tech: "#C8F000",
+          value: "#E4FF6B",
+          source: "#BFBFB8",
         };
 
         var data = { nodes: [], links: [] };
         var ids = {}; // id -> true, to dedupe
         var Graph = ForceGraph3D()(document.getElementById("graph"))
-          .backgroundColor("#0A0A0B")
+          .backgroundColor("#16161A")
           .nodeRelSize(6)
           .nodeOpacity(0.95)
           .nodeResolution(16)

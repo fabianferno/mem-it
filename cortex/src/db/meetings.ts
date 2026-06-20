@@ -83,6 +83,27 @@ export function addActionItem(meetingId: string, text: string): ActionItem {
   return item;
 }
 
+export interface ActionItemWithMeeting extends ActionItem {
+  meetingTitle: string;
+}
+
+/** Every action item across all meetings, tagged with its meeting title. */
+export function listAllActionItems(): ActionItemWithMeeting[] {
+  const rows = openDb().getAllSync(`SELECT * FROM action_items`) as {
+    id: string;
+    meeting_id: string;
+    text: string;
+    done: number;
+  }[];
+  return rows.map((r) => ({
+    id: r.id,
+    meetingId: r.meeting_id,
+    text: r.text,
+    done: !!r.done,
+    meetingTitle: getMeeting(r.meeting_id)?.title ?? "Meeting",
+  }));
+}
+
 export function getActionItems(meetingId: string): ActionItem[] {
   const rows = openDb().getAllSync(`SELECT * FROM action_items WHERE meeting_id = ?`, [
     meetingId,
@@ -92,4 +113,20 @@ export function getActionItems(meetingId: string): ActionItem[] {
 
 export function toggleActionItem(id: string, done: boolean): void {
   openDb().runSync(`UPDATE action_items SET done = ? WHERE id = ?`, [done ? 1 : 0, id]);
+}
+
+/** Remove a meeting and the rows it owns (action items, chunks, edges, and the
+ *  graph nodes it uniquely introduced — shared concepts are left intact). */
+export function deleteMeeting(id: string): void {
+  const db = openDb();
+  db.runSync(`DELETE FROM meetings WHERE id = ?`, [id]);
+  db.runSync(`DELETE FROM action_items WHERE meeting_id = ?`, [id]);
+  db.runSync(`DELETE FROM chunks WHERE meeting_id = ?`, [id]);
+  db.runSync(`DELETE FROM edges WHERE meeting_id = ?`, [id]);
+  const own = db.getAllSync(`SELECT id, mention_count FROM nodes WHERE first_meeting_id = ?`, [
+    id,
+  ]) as { id: string; mention_count: number }[];
+  for (const n of own) {
+    if ((n.mention_count ?? 1) <= 1) db.runSync(`DELETE FROM nodes WHERE id = ?`, [n.id]);
+  }
 }

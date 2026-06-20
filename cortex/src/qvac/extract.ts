@@ -22,7 +22,7 @@ export const EXTRACTION_PROMPT = (transcript: string) =>
 Each element is one of:
   {"kind":"node","label":"<short noun phrase>","type":"person|concept|task|tech|value|source"}
   {"kind":"edge","src":"<node label>","dst":"<node label>","relation":"<verb phrase>"}
-Rules: 8-20 nodes max. Every edge's src and dst MUST be a node label you also emit.
+Rules: 6-12 nodes max. Every edge's src and dst MUST be a node label you also emit.
 No prose, no markdown, no trailing text. Start with [ and end with ].
 Transcript:
 <<<

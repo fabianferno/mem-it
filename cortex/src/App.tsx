@@ -5,6 +5,7 @@ import { AppNavigator } from "./navigation/AppNavigator";
 import { installLifecycle } from "./qvac/lifecycle";
 import { enableProfiler } from "./perf/perfLog";
 import { openDb } from "./db/sqlite";
+import { theme } from "./theme";
 
 export default function App() {
   useEffect(() => {
@@ -15,8 +16,8 @@ export default function App() {
   }, []);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "#0A0A0B" }}>
-      <StatusBar style="light" />
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.color.bg }}>
+      <StatusBar style="dark" />
       <AppNavigator />
     </SafeAreaView>
   );

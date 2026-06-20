@@ -44,6 +44,41 @@ export function upsertNode(p: {
   return { id, merged: false };
 }
 
+/**
+ * Merge a node by normalized label (no embedding needed) so the graph persists
+ * the instant extraction emits it — decoupled from the slow embedding stage.
+ * Same-label, same-type nodes merge and bump mentionCount across meetings.
+ */
+export function upsertNodeByLabel(p: {
+  label: string;
+  type: NodeType;
+  meetingId: string;
+}): { id: string; merged: boolean } {
+  const db = openDb();
+  const norm = (s: string) => s.trim().toLowerCase();
+  const rows = db.getAllSync(`SELECT id, label FROM nodes WHERE type = ?`, [p.type]) as {
+    id: string;
+    label: string;
+  }[];
+  const match = rows.find((r) => norm(r.label) === norm(p.label));
+  if (match) {
+    const cur = db.getFirstSync(`SELECT mention_count FROM nodes WHERE id = ?`, [match.id]) as {
+      mention_count: number;
+    } | null;
+    db.runSync(`UPDATE nodes SET mention_count = ? WHERE id = ?`, [
+      (cur?.mention_count ?? 1) + 1,
+      match.id,
+    ]);
+    return { id: match.id, merged: true };
+  }
+  const id = newId();
+  db.runSync(
+    `INSERT INTO nodes (id, label, type, embedding, mention_count, first_meeting_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [id, p.label, p.type, null, 1, p.meetingId, Date.now()]
+  );
+  return { id, merged: false };
+}
+
 export function insertEdge(p: {
   srcId: string;
   dstId: string;

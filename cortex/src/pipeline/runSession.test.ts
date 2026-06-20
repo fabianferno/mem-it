@@ -17,17 +17,20 @@ beforeEach(() => {
   jest.clearAllMocks();
 });
 
-test("runs stages strictly in order and persists transcript/summary/actions/graph", async () => {
+test("runs stages in review-first order, fires onReviewReady, persists graph during extraction", async () => {
   const callLog: string[] = [];
   (transcribeSession as jest.Mock).mockImplementation(async () => {
     callLog.push("stt");
     return "hello world transcript";
   });
-  (extractEntities as jest.Mock).mockImplementation(async (_t, onNode, onEdge) => {
+  (summarize as jest.Mock).mockImplementation(async () => {
+    callLog.push("summarize");
+    return { summary: "We discussed QVAC.", actionItems: ["email Bob"] };
+  });
+  (extractEntities as jest.Mock).mockImplementation(async (_t, onNode) => {
     callLog.push("extract");
     onNode?.({ label: "QVAC", type: "tech" });
     onNode?.({ label: "Privacy", type: "value" });
-    onEdge?.({ src: "QVAC", dst: "Privacy", relation: "enables" });
     return {
       nodes: [
         { label: "QVAC", type: "tech" },
@@ -36,34 +39,50 @@ test("runs stages strictly in order and persists transcript/summary/actions/grap
       edges: [{ src: "QVAC", dst: "Privacy", relation: "enables" }],
     };
   });
-  (summarize as jest.Mock).mockImplementation(async () => {
-    callLog.push("summarize");
-    return { summary: "We discussed QVAC.", actionItems: ["email Bob"] };
-  });
   (withEmbedder as jest.Mock).mockImplementation(async (fn: any) => {
     callLog.push("embed");
-    let i = 0;
-    return fn(async () => new Float32Array([i++, 1]));
+    return fn(async () => new Float32Array([1, 0]));
   });
 
+  const m = createMeeting({ title: "T" });
+  const stages: string[] = [];
+  let reviewReadyAt = -1;
+  await runSession({
+    meetingId: m.id,
+    wavUri: "file:///a.wav",
+    onStage: (s) => stages.push(s),
+    onReviewReady: () => {
+      reviewReadyAt = stages.length; // captured before extraction starts
+    },
+  });
+
+  expect(callLog).toEqual(["stt", "summarize", "extract", "embed"]);
+  expect(stages).toEqual(["transcribing", "summarizing", "extracting", "embedding", "done"]);
+  // review fired after summarizing, before extracting
+  expect(reviewReadyAt).toBe(2);
+  const saved = getMeeting(m.id);
+  expect(saved?.status).toBe("done");
+  expect(saved?.summary).toBe("We discussed QVAC.");
+  expect(getActionItems(m.id).map((a) => a.text)).toEqual(["email Bob"]);
+  // graph persisted during extraction (label merge, no embedding needed)
+  const g = getGraph();
+  expect(g.nodes).toHaveLength(2);
+  expect(g.edges).toHaveLength(1);
+});
+
+test("shouldCancel aborts at a stage boundary without marking error", async () => {
+  (transcribeSession as jest.Mock).mockResolvedValue("hi");
+  (summarize as jest.Mock).mockResolvedValue({ summary: "s", actionItems: [] });
   const m = createMeeting({ title: "T" });
   const stages: string[] = [];
   await runSession({
     meetingId: m.id,
     wavUri: "file:///a.wav",
     onStage: (s) => stages.push(s),
+    shouldCancel: () => true, // cancel immediately after transcript
   });
-
-  expect(callLog).toEqual(["stt", "extract", "summarize", "embed"]);
-  expect(stages).toEqual(["transcribing", "extracting", "summarizing", "embedding", "done"]);
-  const saved = getMeeting(m.id);
-  expect(saved?.status).toBe("done");
-  expect(saved?.transcript).toBe("hello world transcript");
-  expect(saved?.summary).toBe("We discussed QVAC.");
-  expect(getActionItems(m.id).map((a) => a.text)).toEqual(["email Bob"]);
-  const g = getGraph();
-  expect(g.nodes).toHaveLength(2);
-  expect(g.edges).toHaveLength(1);
+  expect(stages).toContain("idle");
+  expect(getMeeting(m.id)?.status).not.toBe("error");
 });
 
 test("marks meeting error and rethrows when a stage throws", async () => {

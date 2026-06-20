@@ -6,8 +6,11 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
 import { GlassCard } from "../ui/GlassCard";
 import { ask, AskResult } from "../rag/ask";
@@ -16,38 +19,46 @@ export function AskScreen() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<AskResult | null>(null);
+  const [asked, setAsked] = useState("");
 
   async function run() {
     if (!q.trim() || loading) return;
+    const question = q.trim();
+    setAsked(question);
+    setQ("");
     setLoading(true);
     setResult(null);
     try {
-      setResult(await ask(q.trim()));
+      setResult(await ask(question));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <View style={styles.root}>
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
       <Text style={styles.h1}>Ask</Text>
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          value={q}
-          onChangeText={setQ}
-          placeholder="What did I say about…"
-          placeholderTextColor={theme.color.textMuted}
-          onSubmitEditing={run}
-          returnKeyType="search"
-        />
-        <Pressable style={styles.askBtn} onPress={run}>
-          <Text style={styles.askText}>Ask</Text>
-        </Pressable>
-      </View>
 
-      <ScrollView contentContainerStyle={{ padding: theme.space.md, gap: theme.space.md }}>
-        {loading && <ActivityIndicator color={theme.color.accent} />}
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        {!asked && !result && (
+          <Text style={styles.hint}>
+            Ask anything about your recorded meetings. Answers come only from what you've
+            recorded — fully on-device.
+          </Text>
+        )}
+        {asked !== "" && (
+          <View style={styles.userBubble}>
+            <Text style={styles.userText}>{asked}</Text>
+          </View>
+        )}
+        {loading && <ActivityIndicator color={theme.color.accent} style={{ marginTop: theme.space.md }} />}
         {result && (
           <>
             <GlassCard>
@@ -64,14 +75,55 @@ export function AskScreen() {
           </>
         )}
       </ScrollView>
-    </View>
+
+      <View style={styles.inputBar}>
+        <TextInput
+          style={styles.input}
+          value={q}
+          onChangeText={setQ}
+          placeholder="Ask about your meetings…"
+          placeholderTextColor={theme.color.textMuted}
+          onSubmitEditing={run}
+          returnKeyType="send"
+          multiline
+        />
+        <Pressable style={[styles.sendBtn, !q.trim() && styles.sendBtnDim]} onPress={run}>
+          <Ionicons name="arrow-up" color={theme.color.onAccent} size={22} />
+        </Pressable>
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.color.bg, paddingTop: theme.space.xl },
   h1: { color: theme.color.text, ...theme.type.display, paddingHorizontal: theme.space.md },
-  inputRow: { flexDirection: "row", gap: theme.space.sm, padding: theme.space.md },
+  scroll: { flex: 1 },
+  scrollContent: { padding: theme.space.md, gap: theme.space.md },
+  hint: { color: theme.color.textMuted, ...theme.type.body, marginTop: theme.space.lg, lineHeight: 22 },
+  userBubble: {
+    alignSelf: "flex-end",
+    maxWidth: "85%",
+    backgroundColor: theme.color.accent,
+    borderRadius: theme.radius.card,
+    paddingVertical: theme.space.sm,
+    paddingHorizontal: theme.space.md,
+  },
+  userText: { color: theme.color.onAccent, ...theme.type.body },
+  body: { color: theme.color.text, ...theme.type.body, lineHeight: 22 },
+  cite: { color: theme.color.ink, ...theme.type.caption, fontWeight: "700" },
+  citeText: { color: theme.color.textMuted, ...theme.type.caption, marginTop: theme.space.xs },
+  inputBar: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: theme.space.sm,
+    paddingHorizontal: theme.space.md,
+    paddingTop: theme.space.sm,
+    paddingBottom: theme.space.lg,
+    borderTopWidth: 1,
+    borderTopColor: theme.color.glassBorder,
+    backgroundColor: theme.color.surface,
+  },
   input: {
     flex: 1,
     color: theme.color.text,
@@ -80,18 +132,18 @@ const styles = StyleSheet.create({
     borderColor: theme.color.glassBorder,
     borderRadius: theme.radius.pill,
     paddingHorizontal: theme.space.md,
-    height: 48,
+    paddingTop: theme.space.sm,
+    paddingBottom: theme.space.sm,
+    minHeight: 44,
+    maxHeight: 120,
   },
-  askBtn: {
-    paddingHorizontal: theme.space.lg,
-    height: 48,
-    borderRadius: theme.radius.pill,
+  sendBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     backgroundColor: theme.color.accent,
     alignItems: "center",
     justifyContent: "center",
   },
-  askText: { color: theme.color.onAccent, fontWeight: "700" },
-  body: { color: theme.color.text, ...theme.type.body, lineHeight: 22 },
-  cite: { color: theme.color.accent, ...theme.type.caption },
-  citeText: { color: theme.color.textMuted, ...theme.type.caption, marginTop: theme.space.xs },
+  sendBtnDim: { opacity: 0.5 },
 });

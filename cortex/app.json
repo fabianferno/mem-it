@@ -9,9 +9,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "io.cortex.app",
-      "entitlements": {
-        "com.apple.developer.kernel.increased-memory-limit": true
-      },
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Cortex records meetings on-device to transcribe and build your private second brain. Audio never leaves your phone."
       }

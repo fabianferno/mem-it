@@ -67,7 +67,7 @@ export const GraphWebView = forwardRef<GraphHandle, Props>(function GraphWebView
       originWhitelist={["*"]}
       source={{ html: GRAPH_HTML }}
       onMessage={onMessage}
-      style={{ flex: 1, backgroundColor: "#0A0A0B" }}
+      style={{ flex: 1, backgroundColor: "#16161A" }}
       javaScriptEnabled
       domStorageEnabled
       // WebGL needs hardware accel; keep the view opaque on a black canvas.

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
     "@qvac/sdk": "^0.12.2",
     "bare-rpc": "^1.3.3",
     "expo": "~56.0.12",

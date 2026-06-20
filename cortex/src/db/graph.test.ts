@@ -1,4 +1,4 @@
-import { upsertNode, insertEdge, getGraph } from "./graph";
+import { upsertNode, upsertNodeByLabel, insertEdge, getGraph } from "./graph";
 import { insertChunk, searchChunks } from "./chunks";
 import { __resetDbForTests } from "./sqlite";
 
@@ -16,6 +16,16 @@ test("near-duplicate same-type node merges and bumps mentionCount", () => {
   const b = upsertNode({ label: "Q.V.A.C", type: "tech", embedding: vec(0.99), meetingId: "m2" });
   expect(b.merged).toBe(true);
   expect(b.id).toBe(a.id);
+  expect(getGraph().nodes.find((n) => n.id === a.id)!.mentionCount).toBe(2);
+});
+
+test("upsertNodeByLabel merges case-insensitively, no embedding needed", () => {
+  const a = upsertNodeByLabel({ label: "QVAC", type: "tech", meetingId: "m1" });
+  const b = upsertNodeByLabel({ label: "  qvac ", type: "tech", meetingId: "m2" });
+  expect(b.merged).toBe(true);
+  expect(b.id).toBe(a.id);
+  const c = upsertNodeByLabel({ label: "Privacy", type: "value", meetingId: "m1" });
+  expect(c.merged).toBe(false);
   expect(getGraph().nodes.find((n) => n.id === a.id)!.mentionCount).toBe(2);
 });
 
