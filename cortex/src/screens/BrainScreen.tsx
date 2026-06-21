@@ -1,23 +1,20 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { theme } from "../theme";
-import { GraphWebView, GraphHandle } from "../graph3d/GraphWebView";
+import { Graph2D } from "../graph2d/Graph2D";
 import { getGraph } from "../db/graph";
 import { subscribeGraph } from "../pipeline/sessionRunner";
-import type { GraphNode } from "../types";
+import type { GraphNode, GraphEdge } from "../types";
 
 export function BrainScreen() {
-  const graph = useRef<GraphHandle>(null);
-  const ready = useRef(false);
-  const nodes = useRef<GraphNode[]>([]);
+  const [nodes, setNodes] = useState<GraphNode[]>([]);
+  const [edges, setEdges] = useState<GraphEdge[]>([]);
   const [selected, setSelected] = useState<GraphNode | null>(null);
-  const [count, setCount] = useState(0);
 
   function refresh() {
     const g = getGraph();
-    nodes.current = g.nodes;
-    setCount(g.nodes.length);
-    if (ready.current) graph.current?.setGraph(g);
+    setNodes(g.nodes);
+    setEdges(g.edges);
   }
 
   useEffect(() => {
@@ -26,22 +23,22 @@ export function BrainScreen() {
     return subscribeGraph(refresh);
   }, []);
 
-  function onReady() {
-    ready.current = true;
-    refresh();
-  }
-
-  function onNodeTap(id: string) {
-    const n = nodes.current.find((x) => x.id === id) ?? null;
-    setSelected(n);
-    if (n) graph.current?.focusNode(id);
-  }
-
   return (
     <View style={styles.root}>
-      <GraphWebView ref={graph} onReady={onReady} onNodeTap={onNodeTap} />
-      <Text style={styles.title}>Memhive</Text>
-      {count === 0 && (
+      <Graph2D
+        nodes={nodes}
+        edges={edges}
+        selectedId={selected?.id}
+        onSelect={(n) => setSelected(n)}
+      />
+      <View style={styles.header} pointerEvents="none">
+        <Text style={styles.title}>Memhive</Text>
+        <Text style={styles.subtitle}>
+          The people, concepts, and tasks from your mems, woven into one living graph that grows
+          with every recording. Tap a node to explore.
+        </Text>
+      </View>
+      {nodes.length === 0 && (
         <View style={styles.empty} pointerEvents="none">
           <Text style={styles.emptyText}>
             Your memhive is empty. Record a mem and concepts will appear here.
@@ -62,14 +59,30 @@ export function BrainScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.color.bg },
-  title: {
+  header: {
     position: "absolute",
     top: theme.space.xl,
     left: theme.space.md,
-    color: theme.color.text,
-    ...theme.type.display,
+    right: theme.space.md,
   },
-  empty: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, alignItems: "center", justifyContent: "center", padding: theme.space.xl },
+  title: { color: theme.color.text, ...theme.type.display },
+  subtitle: {
+    color: theme.color.textMuted,
+    fontSize: 14,
+    lineHeight: 20,
+    marginTop: theme.space.xs,
+    maxWidth: "92%",
+  },
+  empty: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: theme.space.xl,
+  },
   emptyText: { color: theme.color.textMuted, ...theme.type.body, textAlign: "center" },
   sheet: {
     position: "absolute",

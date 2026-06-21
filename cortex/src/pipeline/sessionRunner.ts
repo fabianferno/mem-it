@@ -70,8 +70,10 @@ export function startSession(
     onNode: () => emitGraph(),
     onEdge: () => emitGraph(),
   })
-    .catch(() => {
-      // runSession already marked the meeting "error"
+    .catch((err) => {
+      // runSession already marked the meeting "error" — surface the cause so
+      // failures are diagnosable instead of a silent "tap to retry".
+      console.error("[session] pipeline failed:", err?.stack || err?.message || err);
     })
     .finally(() => {
       if (cancelled && state.meetingId) deleteMeeting(state.meetingId);

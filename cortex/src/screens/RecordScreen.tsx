@@ -20,10 +20,10 @@ function fmt(ms: number) {
 }
 
 export function RecordScreen({
-  onReview,
+  onStarted,
   onCancel,
 }: {
-  onReview: (meetingId: string) => void;
+  onStarted: () => void;
   onCancel: () => void;
 }) {
   const recorder = useAudioRecorder(WAV_16K_MONO);
@@ -31,7 +31,6 @@ export function RecordScreen({
   const proc = useProcessing();
   const startedAt = useRef(0);
   const [elapsed, setElapsed] = useState(0);
-  const myMeeting = useRef<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -46,16 +45,6 @@ export function RecordScreen({
     const t = setInterval(() => setElapsed(Date.now() - startedAt.current), 250);
     return () => clearInterval(t);
   }, [recState.isRecording]);
-
-  // Once transcript + summary are ready, hand the user to the meeting; the
-  // graph + embeddings keep building in the background.
-  useEffect(() => {
-    if (proc.reviewReady && myMeeting.current) {
-      const id = myMeeting.current;
-      myMeeting.current = null;
-      onReview(id);
-    }
-  }, [proc.reviewReady, onReview]);
 
   async function start() {
     await recorder.prepareToRecordAsync();
@@ -72,8 +61,10 @@ export function RecordScreen({
       return;
     }
     const m = createMeeting({ title: `Meeting ${new Date().toLocaleString()}`, audioUri: uri });
-    myMeeting.current = m.id;
     startSession(m.id, uri);
+    // Hand the user back to Mems immediately — the session keeps processing in
+    // the background and its card there shows live status.
+    onStarted();
   }
 
   async function discardRecording() {
@@ -85,20 +76,26 @@ export function RecordScreen({
 
   function cancelProcessing() {
     cancelSession();
-    myMeeting.current = null;
     onCancel();
   }
 
   // --- Processing view ---
+  // The normal flow returns to Mems the moment recording stops, so this only
+  // shows if the user re-opens Record while a session is still running.
   if (proc.active) {
     return (
       <View style={styles.root}>
         <View style={styles.center}>
           <Text style={styles.heading}>Processing meeting</Text>
-          <Text style={styles.subtle}>You'll be taken to it once the summary is ready.</Text>
+          <Text style={styles.subtle}>
+            This keeps running in the background — head back to Mems to keep working.
+          </Text>
           <View style={{ height: theme.space.xl }} />
           <ProcessingStages stage={proc.stage} />
         </View>
+        <Pressable style={styles.secondaryBtn} onPress={onCancel}>
+          <Text style={styles.secondaryText}>Back to Mems</Text>
+        </Pressable>
         <Pressable style={styles.secondaryBtn} onPress={cancelProcessing}>
           <Text style={styles.secondaryText}>Cancel & discard</Text>
         </Pressable>

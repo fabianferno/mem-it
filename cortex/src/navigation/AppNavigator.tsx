@@ -33,7 +33,7 @@ export function AppNavigator() {
       case "record":
         return (
           <RecordScreen
-            onReview={(meetingId) => setScreen({ name: "detail", meetingId })}
+            onStarted={() => setScreen({ name: "meetings" })}
             onCancel={() => setScreen({ name: "meetings" })}
           />
         );

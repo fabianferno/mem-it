@@ -1,0 +1,5 @@
+flowchart LR
+    M["Meeting"] --> B["Serialize → .memit bundle<br/>(transcript · summary · actions<br/>chunk embeddings · graph subgraph)"]
+    B -->|expo-sharing| AD["📡 AirDrop"]
+    AD -->|expo-document-picker| Imp["Import on recipient device"]
+    Imp -->|upsertNodeByLabel| Merge["Concepts merge into<br/>recipient's brain graph + RAG"]

@@ -63,7 +63,12 @@ export function chunkText(text: string, size = 700, max = 12): string[] {
  * the embedding stage only vectorizes transcript chunks for RAG.
  */
 export async function runSession(opts: RunSessionOpts): Promise<void> {
-  const { meetingId, wavUri, onStage, onReviewReady, onNode, onEdge, shouldCancel } = opts;
+  const { meetingId, wavUri, onReviewReady, onNode, onEdge, shouldCancel } = opts;
+  let stage: Stage = "idle";
+  const onStage = (s: Stage) => {
+    stage = s;
+    opts.onStage(s);
+  };
   const ck = () => {
     if (shouldCancel?.()) throw new Cancelled();
   };
@@ -132,6 +137,7 @@ export async function runSession(opts: RunSessionOpts): Promise<void> {
       onStage("idle");
       return; // caller decides whether to delete the meeting
     }
+    console.error(`[runSession] failed during stage "${stage}":`, (err as any)?.message || err);
     updateMeeting(meetingId, { status: "error" });
     onStage("error");
     throw err;

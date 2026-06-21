@@ -1,0 +1,7 @@
+flowchart LR
+    Q["❓ Question"] --> Route["Llama 3.2 1B<br/>route to a tool"]
+    Route -->|search_memory| T1["Embed query → cosine<br/>top-k over transcript chunks"]
+    Route -->|list_todos| T2["Query action_items table"]
+    T1 --> Ans["Llama 3.2 1B<br/>grounded answer (streamed)<br/>+ citations"]
+    T2 --> Ans
+    Ans --> User["📱 Token-by-token<br/>in the UI"]

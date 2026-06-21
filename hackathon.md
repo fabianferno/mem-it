@@ -430,10 +430,9 @@ phone** — all inference runs through `@qvac/sdk`.
 
 ### Submission artifacts checklist
 
-- [x] Public GitHub repo (https://github.com/fabianferno/wack)
+- [x] Public GitHub repo (https://github.com/fabianferno/mem-it)
 - [x] Apache 2.0 `LICENSE` (root + `cortex/`)
 - [x] Reproducibility instructions (`cortex/README.md`)
-- [x] Prior work disclosure (pivot from Obscura — `cortex/README.md`)
 - [x] API disclosure file (`API_DISCLOSURE.json`)
 - [x] Hardware specs doc (`HARDWARE.md`)
 - [x] Performance log instrumentation (`src/perf/perfLog.ts` → `memit-perf-*.json`)
@@ -442,10 +441,10 @@ phone** — all inference runs through `@qvac/sdk`.
 - [x] Submission write-up (`SUBMISSION.md` — one-liner, description, QVAC usage)
 - [x] Demo video script (`demo-script.md`)
 - [x] Build installed + running on iPhone 14 Pro (iOS 26.5)
-- [ ] **Record the demo video** following `demo-script.md` (≤5 min, YouTube unlisted)
+- [x] **Record the demo video** following `demo-script.md` (≤5 min) — https://canva.link/ea5wy6e447bajjm
 - [ ] **Performance log sample** from a real device run (commit under `evidence/`)
 - [ ] **Hardware/system-profiler screenshots** (commit under `evidence/`)
-- [ ] **Demo video** (YouTube unlisted, ≤5 min) — add link to submission form
+- [x] **Demo video** (≤5 min) — https://canva.link/ea5wy6e447bajjm
 - [ ] **DoraHacks BUIDL** created with all team members
 - [ ] Device verification complete (`cortex/spike.md` tasks 1–6)
 

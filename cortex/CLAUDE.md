@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**mem-it** (package name `mem-it`, dir `cortex/`) — a fully on-device, privacy-first "second brain" for the QVAC Hackathon. Record a meeting; the app transcribes it, extracts a knowledge graph + action items, embeds it for recall, and grows a 3D "brain graph". **No audio, transcript, or derived data leaves the phone** — all inference runs through Tether's `@qvac/sdk`. It is a pivot from a prior project ("Obscura") and reuses its compiled QVAC worker bundle, iOS native wiring, and the sequential load → infer → unload memory discipline.
+**mem-it** (package name `mem-it`, dir `cortex/`) — a fully on-device, privacy-first "second brain" for the QVAC Hackathon. Record a meeting; the app transcribes it, extracts a knowledge graph + action items, embeds it for recall, and grows a 3D "brain graph". **No audio, transcript, or derived data leaves the phone** — all inference runs through Tether's `@qvac/sdk`.
 
 ## ⚠️ Expo 56 — read the docs first
 

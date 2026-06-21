@@ -6,10 +6,6 @@ and grows a glowing 3D "brain graph" of concepts that connects across sessions.
 **No audio, transcript, or derived data ever leaves the phone.** All inference
 runs through Tether's `@qvac/sdk`.
 
-Pivot from Obscura — reuses its compiled QVAC worker bundle, iOS native wiring
-(bare-kit + Swift 6.2 patches), glass UI kit, and the sequential
-load → infer → unload memory discipline.
-
 ## Pipeline (all local, one model in memory at a time)
 
 ```

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, StyleSheet } from "react-native";
+import { View, Text, ScrollView, Pressable, Image, StyleSheet } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
 import { EmptyState } from "../ui/EmptyState";
@@ -46,6 +47,18 @@ export function TodosScreen() {
       <Text style={styles.subtitle}>
         Action items pulled from your mems, gathered here to check off.
       </Text>
+      <View style={styles.hero}>
+        <Image
+          source={require("../../assets/cube-animation.gif")}
+          style={styles.heroImg}
+          resizeMode="cover"
+        />
+        <LinearGradient
+          colors={["transparent", "transparent", theme.color.bg]}
+          style={StyleSheet.absoluteFill}
+          pointerEvents="none"
+        />
+      </View>
       <ScrollView
         contentContainerStyle={{ flexGrow: 1, padding: theme.space.md, gap: theme.space.sm }}
       >
@@ -75,6 +88,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: theme.space.md,
     marginTop: theme.space.xs,
   },
+  hero: {
+    height: 160,
+    marginHorizontal: theme.space.md,
+    marginTop: theme.space.sm,
+    borderRadius: theme.radius.card,
+    overflow: "hidden",
+  },
+  heroImg: { width: "100%", height: "100%" },
   section: {
     color: theme.color.textMuted,
     ...theme.type.caption,

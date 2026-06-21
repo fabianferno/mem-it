@@ -26,6 +26,11 @@ export const completion = jest.fn(() => ({
   tokenStream: (async function* () {
     yield "[]";
   })(),
+  final: Promise.resolve({
+    contentText: "[]",
+    toolCalls: [],
+    raw: { fullText: "[]" },
+  }),
 }));
 export const cancel = jest.fn(async () => {});
 export const suspend = jest.fn(async () => {});

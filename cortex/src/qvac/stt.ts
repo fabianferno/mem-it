@@ -9,7 +9,7 @@ function barePath(uri: string): string {
 
 /**
  * Transcribe a recorded WAV with Whisper. Loads the model, runs once, unloads.
- * Single model in memory for the whole call (the Obscura memory discipline).
+ * Single model in memory for the whole call (the load → infer → unload discipline).
  */
 export async function transcribeSession(
   wavUri: string,

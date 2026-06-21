@@ -66,17 +66,35 @@ flagship phone can transcribe, reason over, and recall your conversations with
 
 ## Architecture (one model in memory at a time)
 
-```
-record (WAV) → Whisper STT → unload
-            → Llama 3.2 1B → summary + action items, then streamed {nodes,edges} → unload
-            → GTE embeddings → transcript-chunk vectors → unload
-            → SQLite (meetings, action_items, nodes, edges, chunks)
-Recall: Llama (route) → tool (search_memory | list_todos) → Llama (answer, streamed)
-Share:  meeting → .memit bundle → AirDrop → import-merge into recipient's graph + RAG
-```
+Everything runs in-process on the phone. The pipeline is **strictly sequential —
+exactly one QVAC model resident in memory at any moment** (load → infer → unload),
+which is what keeps a flagship phone inside its RAM budget while doing the work of
+a cloud notetaker.
+
+### System overview
+
+![System overview](docs/diagrams/system-overview.png)
+
+### Recording pipeline (sequential — load → infer → unload)
+
+![Recording pipeline](docs/diagrams/recording-pipeline.png)
+
+The user sees transcript + summary as soon as they're ready (`onReviewReady`),
+while the slower graph-extraction and embedding stages keep running. Cancellation
+is checked at every stage boundary.
+
+### Recall agent (on-device tool calling)
+
+![Recall agent](docs/diagrams/recall-agent.png)
+
+### Peer-to-peer sharing (offline, no server)
+
+![Peer-to-peer sharing](docs/diagrams/peer-to-peer-sharing.png)
 
 Embeddings are stored as Float32 BLOBs; cosine similarity is computed in JS (no
-vector DB). The 3D graph is `3d-force-graph`/three.js hosted in a WebView.
+vector DB). Graph nodes merge across meetings by cosine (threshold 0.82) and by
+normalized label, so the same concept densifies the graph over time. The 3D graph
+is `3d-force-graph`/three.js hosted in a WebView.
 
 ## How to run
 
@@ -100,21 +118,12 @@ and evidence checklist in [`HARDWARE.md`](./HARDWARE.md).
 
 ## Artifacts
 
-- **Repo:** https://github.com/fabianferno/wack (Apache 2.0)
-- **Demo video:** <!-- TODO: YouTube unlisted link, ≤5 min -->
+- **Repo:** https://github.com/fabianferno/mem-it (Apache 2.0)
+- **Demo video:** https://canva.link/ea5wy6e447bajjm
 - **API disclosure:** [`API_DISCLOSURE.json`](./API_DISCLOSURE.json) — no cloud AI; one-time model download + optional AirDrop only
 - **Performance log:** `memit-perf-*.json` (from a device run; commit under `evidence/`)
 - **Hardware proof:** screenshots per `HARDWARE.md` (commit under `evidence/`)
 - **Build-in-Public:** [`BUILD_IN_PUBLIC.md`](./BUILD_IN_PUBLIC.md)
-
-## Prior work disclosure
-
-Pivot from a prior project, **Obscura**. Reused: the compiled QVAC worker bundle,
-iOS native wiring (bare-kit + Swift patches), the glass UI kit, and the
-sequential load → infer → unload memory discipline. Everything in this submission
-— the meeting pipeline, knowledge graph, RAG/Recall agent, prompt-injection
-defense, perf logging, and `.memit` AirDrop sharing — was built during the
-hackathon.
 
 ## Team
 

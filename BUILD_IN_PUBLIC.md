@@ -5,8 +5,8 @@ engagement + Community-vote criteria). Follow [@QVAC](https://x.com/QVAC) on X
 first. Replace the placeholders, then post.
 
 - **Team hashtag:** `#teamMemit` <!-- change if you prefer another -->
-- **Repo:** https://github.com/fabianferno/wack
-- **Demo video:** <!-- TODO: YouTube unlisted link -->
+- **Repo:** https://github.com/fabianferno/mem-it
+- **Demo video:** https://canva.link/ea5wy6e447bajjm
 
 ---
 
@@ -17,8 +17,8 @@ We built **mem-it**: a private "second brain" for your meetings that runs
 100% on your iPhone. Record → transcribe → knowledge graph → ask it anything.
 No cloud. Nothing leaves the device. Powered by @QVAC. #teamMemit 🧠🔒
 
-🎥 <!-- demo video link -->
-💻 https://github.com/fabianferno/wack
+🎥 https://canva.link/ea5wy6e447bajjm
+💻 https://github.com/fabianferno/mem-it
 
 **2/**
 Why on-device? Your meetings are your most sensitive data — salaries, strategy,
@@ -49,7 +49,7 @@ Your knowledge, literally connecting itself. #teamMemit
 **7/**
 Built for the @QVAC Unleash Edge AI hackathon. Open source (Apache 2.0).
 If edge AI excites you, star the repo and tell us what you'd record first 👇
-https://github.com/fabianferno/wack #teamMemit
+https://github.com/fabianferno/mem-it #teamMemit
 
 ---
 
@@ -59,7 +59,7 @@ mem-it 🧠 — a private second brain for your meetings, 100% on your iPhone.
 Record → transcribe → 3D knowledge graph → ask it anything. No cloud, nothing
 leaves your device. On-device agent + prompt-injection hardened. Powered by
 @QVAC. Open source 👇 #teamMemit
-https://github.com/fabianferno/wack
+https://github.com/fabianferno/mem-it
 
 ---
 
@@ -75,7 +75,7 @@ on the QVAC SDK (Mobile track, iPhone 14 Pro).
 - Prompt-injection defense on all untrusted transcript/context.
 - Live 3D brain graph that merges concepts across meetings.
 
-Repo: https://github.com/fabianferno/wack · Demo: <!-- link -->
+Repo: https://github.com/fabianferno/mem-it · Demo: https://canva.link/ea5wy6e447bajjm
 Feedback very welcome 🙏 #teamMemit
 
 ---

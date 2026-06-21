@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, FlatList, Image, Pressable, Alert, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { theme } from "../theme";
 import { GlassCard } from "../ui/GlassCard";
 import { BrandMark } from "../ui/BrandMark";
 import { EmptyState } from "../ui/EmptyState";
 import { listMeetings, getActionItems, deleteMeeting } from "../db/meetings";
-import { useProcessing } from "../pipeline/sessionRunner";
+import { useProcessing, startSession } from "../pipeline/sessionRunner";
+import { STAGE_LABELS } from "../pipeline/stages";
 import { importMeetingFromFile } from "../share/shareBundle";
 import type { Meeting } from "../types";
 
@@ -32,6 +42,18 @@ export function MeetingsScreen({ onOpen }: { onOpen: (id: string) => void }) {
     } catch (e: any) {
       Alert.alert("Import failed", e?.message ?? "Unknown error");
     }
+  }
+
+  function retry(m: Meeting) {
+    if (proc.active) {
+      Alert.alert("Busy", "Another mem is still processing. Try again once it finishes.");
+      return;
+    }
+    if (!m.audioUri) {
+      Alert.alert("Can't retry", "The original recording for this mem is missing.");
+      return;
+    }
+    startSession(m.id, m.audioUri);
   }
 
   function confirmDelete(id: string, title: string) {
@@ -80,20 +102,31 @@ export function MeetingsScreen({ onOpen }: { onOpen: (id: string) => void }) {
         ListEmptyComponent={
           <EmptyState>No mems yet. Tap the mic button to record your first.</EmptyState>
         }
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => onOpen(item.id)}
-            onLongPress={() => confirmDelete(item.id, item.title)}
-          >
-            <GlassCard>
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.sub} numberOfLines={2}>
-                {item.summary ?? statusLabel(item.status)}
-              </Text>
-              <Text style={styles.meta}>{getActionItems(item.id).length} action items</Text>
-            </GlassCard>
-          </Pressable>
-        )}
+        renderItem={({ item }) => {
+          const processing = proc.active && proc.meetingId === item.id;
+          const failed = item.status === "error" && !processing;
+          return (
+            <Pressable
+              onPress={() => (failed ? retry(item) : onOpen(item.id))}
+              onLongPress={() => confirmDelete(item.id, item.title)}
+            >
+              <GlassCard>
+                <Text style={styles.title}>{item.title}</Text>
+                {processing ? (
+                  <View style={styles.statusRow}>
+                    <ActivityIndicator size="small" color={theme.color.accent} />
+                    <Text style={styles.statusText}>{STAGE_LABELS[proc.stage]}…</Text>
+                  </View>
+                ) : (
+                  <Text style={styles.sub} numberOfLines={2}>
+                    {item.summary ?? statusLabel(item.status)}
+                  </Text>
+                )}
+                <Text style={styles.meta}>{getActionItems(item.id).length} action items</Text>
+              </GlassCard>
+            </Pressable>
+          );
+        }}
       />
     </View>
   );
@@ -128,5 +161,12 @@ const styles = StyleSheet.create({
   heroImg: { width: "100%", height: "100%" },
   title: { color: theme.color.text, ...theme.type.heading },
   sub: { color: theme.color.textMuted, ...theme.type.body, marginTop: theme.space.xs },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.space.sm,
+    marginTop: theme.space.xs,
+  },
+  statusText: { color: theme.color.accent, ...theme.type.body, fontWeight: "600" },
   meta: { color: theme.color.textMuted, ...theme.type.caption, marginTop: theme.space.sm },
 });

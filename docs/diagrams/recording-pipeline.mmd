@@ -1,0 +1,8 @@
+flowchart LR
+    R["🎙️ Record<br/>(WAV)"] --> W["Whisper STT"]
+    W -->|unload| L1["Llama 3.2 1B<br/>summary + action items"]
+    L1 --> L2["Llama 3.2 1B<br/>stream {nodes, edges}"]
+    L2 -->|live graph| Graph["3D brain graph"]
+    L2 -->|unload| E["GTE embeddings<br/>transcript chunks"]
+    E -->|unload| S[("SQLite<br/>meetings · actions<br/>nodes · edges · chunks")]
+    L1 -.->|onReviewReady| UI["Transcript + summary<br/>shown fast"]

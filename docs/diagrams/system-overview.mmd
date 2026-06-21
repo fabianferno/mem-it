@@ -1,0 +1,16 @@
+flowchart TB
+    subgraph Device["📱 iPhone — 100% on-device, no network"]
+        UI["React Native UI<br/>(Mems · Act · Memhive · Recall)"]
+        subgraph QVAC["@qvac/sdk worker — one model resident at a time"]
+            W["Whisper small Q8_0<br/>(STT)"]
+            L["Llama 3.2 1B Q4_0<br/>(summary · graph · recall)"]
+            G["GTE-large FP16<br/>(embeddings, 1024-dim)"]
+        end
+        DB[("SQLite (memit.db)<br/>meetings · action_items<br/>nodes · edges · chunks<br/>embeddings = Float32 BLOBs")]
+        Graph["3D brain graph<br/>(3d-force-graph / three.js<br/>in a WebView)"]
+    end
+    UI --> QVAC
+    QVAC --> DB
+    DB --> Graph
+    Graph --> UI
+    Device -. "AirDrop .memit bundle" .-> Peer["📱 Another iPhone<br/>(merge into their brain)"]
