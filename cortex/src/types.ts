@@ -1,3 +1,5 @@
+import type { Citation, ToolName } from "./rag/ask";
+
 export type Stage =
   | "idle"
   | "transcribing"
@@ -50,4 +52,15 @@ export interface Chunk {
   meetingId: string;
   text: string;
   startMs: number;
+}
+
+export interface AgentMessage {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  /** Which tool the assistant used (assistant turns only); null for user turns. */
+  usedTool: ToolName | null;
+  /** Citations attached to an assistant turn; empty for user turns. */
+  citations: Citation[];
+  createdAt: number;
 }

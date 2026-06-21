@@ -43,6 +43,14 @@ export const DDL = [
     start_ms INTEGER,
     embedding BLOB
   )`,
+  `CREATE TABLE IF NOT EXISTS agent_messages (
+    id TEXT PRIMARY KEY,
+    role TEXT,
+    content TEXT,
+    used_tool TEXT,
+    citations TEXT,
+    created_at INTEGER
+  )`,
 ];
 
 export function migrate(db: SQLiteDatabase): void {

@@ -92,7 +92,7 @@ class FakeDb {
 
   private select(sql: string, params: unknown[]): Row[] {
     const m =
-      /^SELECT\s+([\s\S]+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(\w+)\s*=\s*\?)?(?:\s+ORDER BY\s+(\w+)\s+(ASC|DESC))?$/i.exec(
+      /^SELECT\s+([\s\S]+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(\w+)\s*=\s*\?)?(?:\s+ORDER BY\s+([\w\s,]+?))?$/i.exec(
         sql
       );
     if (!m) throw new Error("FakeDb: unsupported SELECT: " + sql);
@@ -102,8 +102,18 @@ class FakeDb {
     let rows = t.rows.slice();
     if (m[3]) rows = rows.filter((r) => r[m[3]] === params[0]);
     if (m[4]) {
-      const dir = (m[5] || "ASC").toUpperCase() === "DESC" ? -1 : 1;
-      rows.sort((a, b) => (a[m[4]] === b[m[4]] ? 0 : (a[m[4]]! > b[m[4]]! ? 1 : -1) * dir));
+      // Parse compound ORDER BY: "col1 ASC, col2 DESC"
+      const orderTerms = m[4].split(",").map((term) => {
+        const parts = term.trim().split(/\s+/);
+        return { col: parts[0], dir: (parts[1] || "ASC").toUpperCase() === "DESC" ? -1 : 1 };
+      });
+      rows.sort((a, b) => {
+        for (const { col, dir } of orderTerms) {
+          if (a[col] === b[col]) continue;
+          return (a[col]! > b[col]! ? 1 : -1) * dir;
+        }
+        return 0;
+      });
     }
     if (colsPart === "*") return rows.map((r) => ({ ...r }));
     const want = colsPart.split(",").map((c) => c.trim());
