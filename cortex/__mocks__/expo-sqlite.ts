@@ -17,6 +17,8 @@ function normParams(args: unknown[]): unknown[] {
 
 class FakeDb {
   private tables: Record<string, Table> = {};
+  /** Monotonically-increasing counter; assigned to every inserted row as __rowid__. */
+  private _nextRowid = 1;
 
   private ensureTable(name: string, cols: string[]) {
     if (!this.tables[name]) this.tables[name] = { cols, rows: [] };
@@ -61,8 +63,9 @@ class FakeDb {
       this.ensureTable(name, cols);
       const row: Row = {};
       cols.forEach((c, i) => (row[c] = params[i]));
+      row.__rowid__ = this._nextRowid++;
       this.tables[name].rows.push(row);
-      return { changes: 1, lastInsertRowId: this.tables[name].rows.length };
+      return { changes: 1, lastInsertRowId: row.__rowid__ as number };
     }
     const update = /^UPDATE\s+(\w+)\s+SET\s+([\s\S]+?)\s+WHERE\s+(\w+)\s*=\s*\?$/i.exec(sql);
     if (update) {
@@ -91,8 +94,11 @@ class FakeDb {
   }
 
   private select(sql: string, params: unknown[]): Row[] {
+    // ORDER BY clause: only comma-separated `column [ASC|DESC]` terms; the regex
+    // is anchored at $ so LIMIT, OFFSET, or any other trailing token fails to match
+    // and falls through to the "unsupported SELECT" error below.
     const m =
-      /^SELECT\s+([\s\S]+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(\w+)\s*=\s*\?)?(?:\s+ORDER BY\s+([\w\s,]+?))?$/i.exec(
+      /^SELECT\s+([\s\S]+?)\s+FROM\s+(\w+)(?:\s+WHERE\s+(\w+)\s*=\s*\?)?(?:\s+ORDER BY\s+((?:\w+(?:\s+(?:ASC|DESC))?(?:\s*,\s*\w+(?:\s+(?:ASC|DESC))?)*)?))?$/i.exec(
         sql
       );
     if (!m) throw new Error("FakeDb: unsupported SELECT: " + sql);
@@ -103,9 +109,12 @@ class FakeDb {
     if (m[3]) rows = rows.filter((r) => r[m[3]] === params[0]);
     if (m[4]) {
       // Parse compound ORDER BY: "col1 ASC, col2 DESC"
+      // Map the SQL token `rowid` to the synthetic __rowid__ field.
       const orderTerms = m[4].split(",").map((term) => {
         const parts = term.trim().split(/\s+/);
-        return { col: parts[0], dir: (parts[1] || "ASC").toUpperCase() === "DESC" ? -1 : 1 };
+        const sqlCol = parts[0];
+        const col = sqlCol.toLowerCase() === "rowid" ? "__rowid__" : sqlCol;
+        return { col, dir: (parts[1] || "ASC").toUpperCase() === "DESC" ? -1 : 1 };
       });
       rows.sort((a, b) => {
         for (const { col, dir } of orderTerms) {
