@@ -62,7 +62,7 @@ export function AppNavigator() {
           <BlurView intensity={theme.blurIntensity} tint="dark" style={styles.tabbarBlur} />
           <View style={styles.tabbarRow}>
             <NavTab
-              label="Mems"
+              label="Home"
               active={tab === "meetings"}
               onPress={() => setScreen({ name: "meetings" })}
               render={(color, size) => <Ionicons name="list" color={color} size={size} />}
@@ -89,10 +89,12 @@ export function AppNavigator() {
               )}
             />
             <NavTab
-              label="Recall"
+              label="Agent"
               active={tab === "ask"}
               onPress={() => setScreen({ name: "ask" })}
-              render={(color, size) => <Ionicons name="search" color={color} size={size} />}
+              render={(color, size) => (
+                <Ionicons name="chatbubbles-outline" color={color} size={size} />
+              )}
             />
           </View>
         </View>
