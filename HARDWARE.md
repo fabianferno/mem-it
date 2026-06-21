@@ -49,9 +49,10 @@ The QVAC hackathon requires system-profiler proof. Capture and add to this repo:
       capacity, iOS version) and/or Xcode → Window → Devices and Simulators
       showing the connected device's model identifier and OS.
 - [ ] **Storage screenshot** — Settings → General → iPhone Storage (total/free).
-- [ ] **Performance log** — `memit-perf-*.json` is written to the app's document
-      directory after each recording (see below); pull one from a real run and
-      commit it under `evidence/`.
+- [x] **Performance log** — captured: [`evidence/memit-perf-1782083338975.json`](./evidence/memit-perf-1782083338975.json),
+      a real on-device run (Whisper STT → Llama 3.2 1B → GTE embeddings; TTFT
+      ~1.0 s, ~44 tok/s, ~33.9 s total). Pulled via `devicectl`; see
+      [`evidence/README.md`](./evidence/README.md).
 
 Suggested layout:
 

@@ -133,7 +133,7 @@ and evidence checklist in [`HARDWARE.md`](./HARDWARE.md).
 - **Repo:** https://github.com/fabianferno/mem-it (Apache 2.0)
 - **Demo video:** https://canva.link/ea5wy6e447bajjm
 - **API disclosure:** [`API_DISCLOSURE.json`](./API_DISCLOSURE.json) — no cloud AI; one-time model download + optional AirDrop only
-- **Performance log:** `memit-perf-*.json` (from a device run; commit under `evidence/`)
+- **Performance log:** [`evidence/memit-perf-1782083338975.json`](./evidence/memit-perf-1782083338975.json) — real on-device run (TTFT ~1.0 s, ~44 tok/s on Llama 1B, ~33.9 s total); see [`evidence/README.md`](./evidence/README.md)
 - **Hardware proof:** screenshots per `HARDWARE.md` (commit under `evidence/`)
 - **Build-in-Public:** [`BUILD_IN_PUBLIC.md`](./BUILD_IN_PUBLIC.md)
 
