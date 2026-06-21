@@ -49,6 +49,7 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
   );
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(meeting?.title ?? "");
+  const [analyzing, setAnalyzing] = useState(false);
   // Refresh action items as the background pipeline persists them.
   useEffect(() => setItems(getActionItems(meetingId)), [meetingId, proc.stage, proc.active]);
 
@@ -94,6 +95,10 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
       Alert.alert("Busy", "A mem is still processing. Try again once it finishes.");
       return;
     }
+    if (analyzing) {
+      Alert.alert("Busy", "Still analyzing the previous photo. One moment.");
+      return;
+    }
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     const useCamera = perm.granted;
     const picked = useCamera
@@ -104,12 +109,14 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
 
     const att = addAttachment(meetingId, uri);
     setAttachments(getAttachments(meetingId));
+    setAnalyzing(true);
     try {
       const analysis = await analyzeImage(uri);
       updateAttachmentAnalysis(att.id, analysis, "done");
     } catch (e: any) {
       updateAttachmentAnalysis(att.id, e?.message ?? "Analysis failed", "error");
     } finally {
+      setAnalyzing(false);
       setAttachments(getAttachments(meetingId));
     }
   }
@@ -234,7 +241,7 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
         <GlassCard>
           <View style={styles.cardHeader}>
             <Text style={styles.label}>Photos</Text>
-            <Pressable onPress={addPhoto} hitSlop={8} style={styles.addPhotoBtn}>
+            <Pressable onPress={addPhoto} hitSlop={8} style={[styles.addPhotoBtn, analyzing && { opacity: 0.4 }]} disabled={analyzing}>
               <Ionicons name="camera-outline" size={15} color={theme.color.accent} />
               <Text style={styles.addPhotoText}>Add photo</Text>
             </Pressable>
