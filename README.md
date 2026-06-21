@@ -18,9 +18,9 @@ Record · transcribe · build a knowledge graph · ask it anything — with zero
 
 ## What it is
 
-mem-it records a meeting and, fully on-device via Tether's [`@qvac/sdk`](https://www.npmjs.com/package/@qvac/sdk), transcribes it (Whisper), extracts a knowledge graph + action items + a summary (Llama 3.2 1B), embeds it for retrieval (GTE-large), and grows a live 3D "brain graph" where the same concept merges across meetings.
+mem-it records a meeting and, fully on-device via Tether's [`@qvac/sdk`](https://www.npmjs.com/package/@qvac/sdk), transcribes it (Whisper), extracts a knowledge graph + action items + a summary (Llama 3.2 1B), embeds it for retrieval (GTE-large), and grows a live 3D "brain graph" where the same concept merges across meetings. Snap a photo of paper notes, a whiteboard, or a place and an on-device vision model (Qwen3-VL 2B) reads and describes it, attaching the analysis to the meeting.
 
-**Recall** is a small on-device agent that tool-calls between your transcripts and your action items, then answers with streaming citations. It's hardened against prompt injection, and you can AirDrop a meeting to another iPhone where it merges into *their* brain — peer-to-peer, offline, no server.
+The **Agent** is a small on-device agent that tool-calls between your transcripts and your action items, then answers with streaming citations over a persistent conversation. It's hardened against prompt injection, and you can AirDrop a meeting to another iPhone where it merges into *their* brain — peer-to-peer, offline, no server.
 
 Put the phone in airplane mode and it still works.
 
@@ -30,7 +30,8 @@ Your meetings are your most sensitive data — strategy, salaries, deals, health
 
 ## What's novel
 
-- **On-device agent, not just RAG** — Recall routes between tools (`search_memory` over transcripts, `list_todos` over the action-items table), then answers grounded in the result, streaming token-by-token with citations. Tool calling on a 1B model, on a phone.
+- **On-device agent, not just RAG** — the Agent routes between tools (`search_memory` over transcripts, `list_todos` over the action-items table), then answers grounded in the result, streaming token-by-token with citations, over a persisted conversation. Tool calling on a 1B model, on a phone.
+- **On-device multimodal vision** — attach a photo (paper notes, a whiteboard, a place, people); Qwen3-VL 2B reads any text verbatim and describes the scene on-device (load VLM + mmproj → infer → unload), storing the result in the meeting's Photos section. Never uploaded, never merged into the summary.
 - **Live 3D knowledge graph** — entities stream into a force-directed 3D graph as the model generates them, and the same concept merges across meetings by similarity (cosine, threshold 0.82).
 - **Prompt-injection hardened** — transcripts/context are untrusted; that text is fenced as data with an instruction hierarchy and forged markers are stripped, so it's never obeyed.
 - **AirDrop a memory (P2P, offline)** — export a meeting as a portable `.memit` bundle (with chunk embeddings + graph subgraph) and AirDrop it; it merges into a teammate's brain graph and RAG index by label. No cloud.
@@ -42,9 +43,10 @@ Your meetings are your most sensitive data — strategy, salaries, deals, health
 record (WAV) → Whisper STT → unload
             → Llama 3.2 1B → summary + action items, then streamed {nodes, edges} → unload
             → GTE embeddings → transcript-chunk vectors → unload
-            → SQLite (meetings, action_items, nodes, edges, chunks)
+            → SQLite (meetings, action_items, nodes, edges, chunks, meeting_attachments, agent_messages)
 
-Recall: Llama (route) → tool (search_memory | list_todos) → Llama (answer, streamed)
+Photo:  attach image → Qwen3-VL 2B (+ mmproj) → on-device OCR + scene description → unload → meeting's Photos section
+Agent:  Llama (route) → tool (search_memory | list_todos) → Llama (answer, streamed) → persisted conversation
 Share:  meeting → .memit bundle → AirDrop → import-merge into recipient's graph + RAG
 ```
 
@@ -57,8 +59,9 @@ flowchart TB
     subgraph user["👤 You"]
         A1["🎙️ Record a meeting"]
         A2["📖 Review"]
-        A3["💬 Ask a question"]
+        A3["💬 Ask the Agent"]
         A4["📡 Share"]
+        A5["📷 Attach a photo"]
     end
 
     subgraph models["🧠 QVAC models — one resident in memory at a time (load → infer → unload)"]
@@ -66,18 +69,20 @@ flowchart TB
         M1["Whisper small Q8_0<br/>Speech → text"]
         M2["Llama 3.2 1B Q4_0<br/>Summary · graph · routing · answers"]
         M3["GTE-large FP16<br/>1024-dim embeddings"]
+        M4["Qwen3-VL 2B Q4_K + mmproj<br/>Image → OCR + description"]
     end
 
     subgraph store["💾 On-device store (SQLite + Float32 BLOBs)"]
-        DB[("meetings · action_items<br/>nodes · edges · chunks")]
+        DB[("meetings · action_items · nodes<br/>edges · chunks · attachments · agent_messages")]
     end
 
     subgraph feat["✨ Features"]
         F1["📝 Transcript + summary"]
         F2["✅ Action items"]
         F3["🌐 Live 3D brain graph<br/>(concepts merge across meetings)"]
-        F4["🔎 Recall agent (RAG + tools)<br/>grounded, streamed, cited"]
+        F4["🔎 Agent (RAG + tools)<br/>grounded, streamed, cited, persisted"]
         F5["🤝 .memit AirDrop bundle<br/>P2P merge, offline"]
+        F6["🖼️ Photos<br/>on-device image analysis"]
     end
 
     A1 -->|WAV| M1
@@ -94,19 +99,22 @@ flowchart TB
     M2 -->|route: search_memory / list_todos| DB
     DB -->|top-k context| M2
     M2 --> F4
+    A5 -->|image| M4
+    M4 -->|description| F6
+    F6 --> DB
     A4 --> F5
     DB --> F5
     F5 -. "AirDrop (no cloud)" .-> Peer["📱 Another iPhone<br/>concepts merge into their brain"]
 
     classDef model fill:#2a1116,stroke:#e53659,color:#fff;
     classDef feature fill:#101317,stroke:#ff5c78,color:#fafafa;
-    class M1,M2,M3 model;
-    class F1,F2,F3,F4,F5 feature;
+    class M1,M2,M3,M4 model;
+    class F1,F2,F3,F4,F5,F6 feature;
 ```
 
 Exactly one QVAC model is resident at a time. Embeddings are stored as Float32 BLOBs and cosine similarity is computed in JS (no vector DB). The 3D graph is `3d-force-graph`/three.js hosted in a WebView.
 
-**Models:** `WHISPER_SMALL_Q8_0` (STT) · `LLAMA_3_2_1B_INST_Q4_0` (LLM) · `GTE_LARGE_FP16` (embeddings, 1024-dim).
+**Models:** `WHISPER_SMALL_Q8_0` (STT) · `LLAMA_3_2_1B_INST_Q4_0` (LLM) · `GTE_LARGE_FP16` (embeddings, 1024-dim) · `QWEN3VL_2B_MULTIMODAL_Q4_K` + `MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K` (on-device image analysis, loaded only when a photo is attached).
 
 ## Quick start
 
@@ -115,10 +123,10 @@ The app lives in [`cortex/`](cortex/) (Expo SDK 56 / React Native 0.85). A real 
 ```bash
 cd cortex
 npm install
-npx expo install expo-audio expo-sqlite react-native-webview expo-sharing expo-document-picker
+npx expo install expo-audio expo-sqlite react-native-webview expo-sharing expo-document-picker expo-image-picker
 npm run bundle:graph
 npm run ios            # real device required
-npm test               # unit tests, no device needed
+npm test               # 56 unit tests, no device needed
 ```
 
 First launch downloads the three QVAC models, then runs fully offline. A structured performance log (`memit-perf-*.json`) is written to the app document directory after each recording.

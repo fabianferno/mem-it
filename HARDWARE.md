@@ -1,7 +1,8 @@
 # Hardware Specifications — mem-it
 
 mem-it runs entirely on-device. All QVAC inference (Whisper STT, Llama 3.2 1B,
-GTE-large embeddings) executes on the phone below; no inference is offloaded.
+GTE-large embeddings, and Qwen3-VL 2B image analysis) executes on the phone below;
+no inference is offloaded.
 
 > Track: **Mobile** (retail smartphone, on-device inference).
 
@@ -29,6 +30,13 @@ GTE-large embeddings) executes on the phone below; no inference is offloaded.
 | STT | Whisper small | Q8_0 | ~250 MB |
 | LLM | Llama 3.2 1B Instruct | Q4_0 | ~770 MB |
 | Embeddings | GTE-large | FP16 | ~670 MB |
+| Vision¹ | Qwen3-VL 2B Instruct (+ mmproj projector) | Q4_K_M (+ Q8_0) | ~1.5 GB + ~0.9 GB projector (approx.) |
+
+¹ The vision model and its multimodal projector load **only** while analyzing an
+attached photo, then unload — the same load → infer → unload discipline. Sizes are
+approximate; confirm against the registry build. Camera/photo-library access is
+declared in `Info.plist` (`NSCameraUsageDescription`, `NSPhotoLibraryUsageDescription`);
+images and their analysis stay on-device.
 
 Peak memory holds exactly one model at a time (never concurrent), which is what
 keeps mem-it within the iPhone's 6 GB budget.
