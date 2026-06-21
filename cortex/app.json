@@ -10,7 +10,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "io.memit.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "mem-it records mems on-device to transcribe and build your private second brain. Audio never leaves your phone."
+        "NSMicrophoneUsageDescription": "mem-it records mems on-device to transcribe and build your private second brain. Audio never leaves your phone.",
+        "NSCameraUsageDescription": "mem-it analyzes photos of notes, whiteboards, or places on-device to add them to your mems. Images never leave your phone.",
+        "NSPhotoLibraryUsageDescription": "mem-it analyzes photos you attach on-device to add them to your mems. Images never leave your phone."
       }
     },
     "android": {
