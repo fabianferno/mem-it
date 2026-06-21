@@ -123,6 +123,7 @@ export function deleteMeeting(id: string): void {
   db.runSync(`DELETE FROM action_items WHERE meeting_id = ?`, [id]);
   db.runSync(`DELETE FROM chunks WHERE meeting_id = ?`, [id]);
   db.runSync(`DELETE FROM edges WHERE meeting_id = ?`, [id]);
+  db.runSync(`DELETE FROM meeting_attachments WHERE meeting_id = ?`, [id]);
   const own = db.getAllSync(`SELECT id, mention_count FROM nodes WHERE first_meeting_id = ?`, [
     id,
   ]) as { id: string; mention_count: number }[];

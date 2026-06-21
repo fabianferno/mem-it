@@ -64,3 +64,14 @@ export interface AgentMessage {
   citations: Citation[];
   createdAt: number;
 }
+
+export type AttachmentStatus = "analyzing" | "done" | "error";
+
+export interface MeetingAttachment {
+  id: string;
+  meetingId: string;
+  uri: string;
+  analysis: string | null;
+  status: AttachmentStatus;
+  createdAt: number;
+}

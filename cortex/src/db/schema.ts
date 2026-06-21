@@ -51,6 +51,14 @@ export const DDL = [
     citations TEXT,
     created_at INTEGER
   )`,
+  `CREATE TABLE IF NOT EXISTS meeting_attachments (
+    id TEXT PRIMARY KEY,
+    meeting_id TEXT,
+    uri TEXT,
+    analysis TEXT,
+    status TEXT,
+    created_at INTEGER
+  )`,
 ];
 
 export function migrate(db: SQLiteDatabase): void {
