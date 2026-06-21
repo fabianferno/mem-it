@@ -6,6 +6,8 @@ export const WHISPER_SMALL_Q8_0 = "WHISPER_SMALL_Q8_0";
 export const WHISPER_BASE_Q8_0 = "WHISPER_BASE_Q8_0";
 export const LLAMA_3_2_1B_INST_Q4_0 = "LLAMA_3_2_1B_INST_Q4_0";
 export const GTE_LARGE_FP16 = "GTE_LARGE_FP16";
+export const QWEN3VL_2B_MULTIMODAL_Q4_K = "QWEN3VL_2B_MULTIMODAL_Q4_K";
+export const MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K = "MMPROJ_QWEN3VL_2B_MULTIMODAL_Q4_K";
 
 // Profiler (used by perfLog.ts)
 export const profiler = {
