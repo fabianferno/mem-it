@@ -78,11 +78,9 @@ export function MeetingsScreen({ onOpen }: { onOpen: (id: string) => void }) {
           <Text style={styles.importText}>Import</Text>
         </Pressable>
       </View>
+      <Text style={styles.eyebrow}>Conversational Knowledge Engine</Text>
       <Text style={styles.h1}>Mems</Text>
-      <Text style={styles.subtitle}>
-        Record a meeting or a moment — each mem is transcribed on-device and woven into your second
-        brain.
-      </Text>
+      <Text style={styles.subtitle}>Record. Recall. Everything stays on your phone.</Text>
       <View style={styles.hero}>
         <Image
           source={require("../../assets/mems-hero.gif")}
@@ -94,6 +92,14 @@ export function MeetingsScreen({ onOpen }: { onOpen: (id: string) => void }) {
           style={StyleSheet.absoluteFill}
           pointerEvents="none"
         />
+        <View style={styles.poweredBy} pointerEvents="none">
+          <Text style={styles.poweredByText}>Powered by</Text>
+          <Image
+            source={require("../../assets/qvac-logo.png")}
+            style={styles.qvacLogo}
+            resizeMode="contain"
+          />
+        </View>
       </View>
       <FlatList
         data={meetings}
@@ -169,4 +175,24 @@ const styles = StyleSheet.create({
   },
   statusText: { color: theme.color.accent, ...theme.type.body, fontWeight: "600" },
   meta: { color: theme.color.textMuted, ...theme.type.caption, marginTop: theme.space.sm },
+  eyebrow: {
+    color: theme.color.accent,
+    ...theme.type.caption,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    paddingHorizontal: theme.space.md,
+    marginBottom: 2,
+  },
+  poweredBy: {
+    position: "absolute",
+    bottom: theme.space.sm,
+    left: theme.space.md,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    opacity: 0.85,
+  },
+  poweredByText: { color: theme.color.textMuted, ...theme.type.caption },
+  qvacLogo: { width: 90, height: 10 },
 });
