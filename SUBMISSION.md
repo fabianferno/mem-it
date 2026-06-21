@@ -73,11 +73,11 @@ a cloud notetaker.
 
 ### System overview
 
-![System overview](docs/diagrams/system-overview.png)
+![System overview][system-overview-diagram]
 
 ### Recording pipeline (sequential — load → infer → unload)
 
-![Recording pipeline](docs/diagrams/recording-pipeline.png)
+![Recording pipeline][recording-pipeline-diagram]
 
 The user sees transcript + summary as soon as they're ready (`onReviewReady`),
 while the slower graph-extraction and embedding stages keep running. Cancellation
@@ -85,11 +85,11 @@ is checked at every stage boundary.
 
 ### Recall agent (on-device tool calling)
 
-![Recall agent](docs/diagrams/recall-agent.png)
+![Recall agent][recall-agent-diagram]
 
 ### Peer-to-peer sharing (offline, no server)
 
-![Peer-to-peer sharing](docs/diagrams/peer-to-peer-sharing.png)
+![Peer-to-peer sharing][peer-to-peer-sharing-diagram]
 
 Embeddings are stored as Float32 BLOBs; cosine similarity is computed in JS (no
 vector DB). Graph nodes merge across meetings by cosine (threshold 0.82) and by
@@ -136,3 +136,9 @@ and evidence checklist in [`HARDWARE.md`](./HARDWARE.md).
 All inference is local through `@qvac/sdk`. No API keys, no accounts, no network
 needed after the initial model download. Judges can verify the offline claim by
 enabling airplane mode and running a full record → recall flow.
+
+<!-- Diagram image references: GitHub raw URLs so pasted Markdown can load them. -->
+[system-overview-diagram]: https://raw.githubusercontent.com/fabianferno/mem-it/main/docs/diagrams/system-overview.png
+[recording-pipeline-diagram]: https://raw.githubusercontent.com/fabianferno/mem-it/main/docs/diagrams/recording-pipeline.png
+[recall-agent-diagram]: https://raw.githubusercontent.com/fabianferno/mem-it/main/docs/diagrams/recall-agent.png
+[peer-to-peer-sharing-diagram]: https://raw.githubusercontent.com/fabianferno/mem-it/main/docs/diagrams/peer-to-peer-sharing.png
