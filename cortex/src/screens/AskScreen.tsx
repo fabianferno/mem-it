@@ -10,6 +10,7 @@ import {
   Keyboard,
   Platform,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
@@ -57,10 +58,12 @@ export function AskScreen() {
         usedTool: res.usedTool,
         citations: res.citations,
       });
-      setMessages(getAgentMessages());
+    } catch (e: any) {
+      Alert.alert("Couldn't answer", e?.message ?? "Something went wrong. Please try again.");
     } finally {
       setStreaming("");
       setLoading(false);
+      setMessages(getAgentMessages());
       scrollToEnd();
     }
   }
