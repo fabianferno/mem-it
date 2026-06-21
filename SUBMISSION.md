@@ -6,6 +6,8 @@
 iPhone — record, transcribe, build a knowledge graph, and ask it anything, with
 zero cloud and nothing ever leaving the device.**
 
+![mem-it app screenshots](https://raw.githubusercontent.com/fabianferno/mem-it/main/screenshots.png)
+
 ## Short description (for the form)
 
 mem-it records a meeting and, fully on-device via Tether's `@qvac/sdk`,

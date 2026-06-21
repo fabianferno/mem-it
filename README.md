@@ -8,6 +8,8 @@
 
 Record · transcribe · build a knowledge graph · ask it anything — with zero cloud and nothing ever leaving the device.
 
+<img src="https://raw.githubusercontent.com/fabianferno/mem-it/main/screenshots.png" alt="mem-it app screenshots" width="900" />
+
 <img src="animation.gif" alt="mem-it demo" width="280" />
 
 [Demo video](https://canva.link/ea5wy6e447bajjm) · [Submission](SUBMISSION.md) · [Hardware](HARDWARE.md) · [App docs](cortex/README.md) · [Build in public](BUILD_IN_PUBLIC.md)
