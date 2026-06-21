@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, TextInput, ScrollView, Pressable, ActivityIndicator, Alert, StyleSheet } from "react-native";
+import { View, Text, TextInput, ScrollView, Pressable, ActivityIndicator, Alert, StyleSheet, Image } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
+import * as ImagePicker from "expo-image-picker";
 import { theme } from "../theme";
 import { GlassCard } from "../ui/GlassCard";
 import { getMeeting, getActionItems, toggleActionItem, deleteMeeting, updateMeeting } from "../db/meetings";
 import { useProcessing, startSession } from "../pipeline/sessionRunner";
 import { STAGE_LABELS } from "../pipeline/stages";
 import { exportMeeting } from "../share/shareBundle";
-import type { ActionItem } from "../types";
+import { getAttachments, addAttachment, updateAttachmentAnalysis, deleteAttachment } from "../db/attachments";
+import { analyzeImage } from "../qvac/vision";
+import type { ActionItem, MeetingAttachment } from "../types";
 
 /** Inline copy-to-clipboard control with a brief "Copied" confirmation. */
 function CopyButton({ text }: { text: string }) {
@@ -41,6 +44,9 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
   const proc = useProcessing();
   const meeting = getMeeting(meetingId);
   const [items, setItems] = useState<ActionItem[]>(() => getActionItems(meetingId));
+  const [attachments, setAttachments] = useState<MeetingAttachment[]>(() =>
+    getAttachments(meetingId)
+  );
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(meeting?.title ?? "");
   // Refresh action items as the background pipeline persists them.
@@ -81,6 +87,45 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
     } catch (e: any) {
       Alert.alert("Couldn't share", e?.message ?? "Unknown error");
     }
+  }
+
+  async function addPhoto() {
+    if (proc.active) {
+      Alert.alert("Busy", "A mem is still processing. Try again once it finishes.");
+      return;
+    }
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    const useCamera = perm.granted;
+    const picked = useCamera
+      ? await ImagePicker.launchCameraAsync({ quality: 0.7 })
+      : await ImagePicker.launchImageLibraryAsync({ quality: 0.7 });
+    if (picked.canceled || !picked.assets?.[0]) return;
+    const uri = picked.assets[0].uri;
+
+    const att = addAttachment(meetingId, uri);
+    setAttachments(getAttachments(meetingId));
+    try {
+      const analysis = await analyzeImage(uri);
+      updateAttachmentAnalysis(att.id, analysis, "done");
+    } catch (e: any) {
+      updateAttachmentAnalysis(att.id, e?.message ?? "Analysis failed", "error");
+    } finally {
+      setAttachments(getAttachments(meetingId));
+    }
+  }
+
+  function removePhoto(id: string) {
+    Alert.alert("Remove photo?", "This deletes the photo and its analysis.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Remove",
+        style: "destructive",
+        onPress: () => {
+          deleteAttachment(id);
+          setAttachments(getAttachments(meetingId));
+        },
+      },
+    ]);
   }
 
   function confirmDelete() {
@@ -185,6 +230,44 @@ export function MeetingDetailScreen({ meetingId, onBack }: { meetingId: string; 
           </View>
           <Text style={styles.body}>{meeting.transcript ?? "—"}</Text>
         </GlassCard>
+
+        <GlassCard>
+          <View style={styles.cardHeader}>
+            <Text style={styles.label}>Photos</Text>
+            <Pressable onPress={addPhoto} hitSlop={8} style={styles.addPhotoBtn}>
+              <Ionicons name="camera-outline" size={15} color={theme.color.accent} />
+              <Text style={styles.addPhotoText}>Add photo</Text>
+            </Pressable>
+          </View>
+          {attachments.length === 0 && (
+            <Text style={styles.body}>
+              Attach a photo of paper notes, a whiteboard, a place, or people — analyzed on-device and
+              kept with this mem.
+            </Text>
+          )}
+          {attachments.map((a) => (
+            <View key={a.id} style={styles.photoRow}>
+              <Image source={{ uri: a.uri }} style={styles.photoThumb} resizeMode="cover" />
+              <View style={styles.photoBody}>
+                {a.status === "analyzing" && (
+                  <View style={styles.building}>
+                    <ActivityIndicator size="small" color={theme.color.accent} />
+                    <Text style={styles.buildingText}>Analyzing…</Text>
+                  </View>
+                )}
+                {a.status === "done" && <Text style={styles.body}>{a.analysis}</Text>}
+                {a.status === "error" && (
+                  <Text style={[styles.body, { color: theme.color.danger }]}>
+                    {a.analysis ?? "Analysis failed."}
+                  </Text>
+                )}
+                <Pressable onPress={() => removePhoto(a.id)} hitSlop={8}>
+                  <Text style={styles.removePhotoText}>Remove</Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </GlassCard>
       </ScrollView>
     </View>
   );
@@ -229,6 +312,17 @@ const styles = StyleSheet.create({
   itemDone: { color: theme.color.textMuted, textDecorationLine: "line-through" },
   building: { flexDirection: "row", alignItems: "center", gap: theme.space.sm },
   buildingText: { color: theme.color.textMuted, ...theme.type.caption },
+  addPhotoBtn: { flexDirection: "row", alignItems: "center", gap: 4 },
+  addPhotoText: { color: theme.color.accent, ...theme.type.caption, fontWeight: "600" },
+  photoRow: { flexDirection: "row", gap: theme.space.sm, paddingVertical: theme.space.sm },
+  photoThumb: {
+    width: 64,
+    height: 64,
+    borderRadius: theme.radius.sm,
+    backgroundColor: theme.color.surface,
+  },
+  photoBody: { flex: 1, gap: theme.space.xs },
+  removePhotoText: { color: theme.color.textMuted, ...theme.type.caption },
   errorBanner: {
     flexDirection: "row",
     alignItems: "center",

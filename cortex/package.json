@@ -15,6 +15,7 @@
     "expo-document-picker": "~56.0.4",
     "expo-file-system": "~56.0.8",
     "expo-haptics": "~56.0.3",
+    "expo-image-picker": "~56.0.18",
     "expo-linear-gradient": "~56.0.4",
     "expo-sharing": "~56.0.18",
     "expo-sqlite": "~56.0.0",
