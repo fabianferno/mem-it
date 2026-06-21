@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
+  Keyboard,
   Platform,
   StyleSheet,
 } from "react-native";
@@ -14,55 +15,124 @@ import { Ionicons } from "@expo/vector-icons";
 import { theme } from "../theme";
 import { GlassCard } from "../ui/GlassCard";
 import { EmptyState } from "../ui/EmptyState";
-import { ask, AskResult } from "../rag/ask";
+import { ask } from "../rag/ask";
+import { getAgentMessages, appendAgentMessage, clearAgentMessages } from "../db/agent";
+import type { AgentMessage } from "../types";
 
 export function AskScreen() {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<AskResult | null>(null);
   const [streaming, setStreaming] = useState("");
-  const [asked, setAsked] = useState("");
+  const [messages, setMessages] = useState<AgentMessage[]>(() => getAgentMessages());
+  const scrollRef = useRef<ScrollView>(null);
+
+  function scrollToEnd() {
+    requestAnimationFrame(() => scrollRef.current?.scrollToEnd({ animated: true }));
+  }
+
+  // Keep the latest message visible when the keyboard opens.
+  useEffect(() => {
+    const evt = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
+    const sub = Keyboard.addListener(evt, scrollToEnd);
+    return () => sub.remove();
+  }, []);
 
   async function run() {
     if (!q.trim() || loading) return;
     const question = q.trim();
-    setAsked(question);
     setQ("");
     setLoading(true);
-    setResult(null);
     setStreaming("");
+    appendAgentMessage({ role: "user", content: question, usedTool: null, citations: [] });
+    setMessages(getAgentMessages());
+    scrollToEnd();
     try {
-      const res = await ask(question, (tok) => setStreaming((prev) => prev + tok));
-      setResult(res);
+      const res = await ask(question, (tok) => {
+        setStreaming((prev) => prev + tok);
+        scrollToEnd();
+      });
+      appendAgentMessage({
+        role: "assistant",
+        content: res.answer,
+        usedTool: res.usedTool,
+        citations: res.citations,
+      });
+      setMessages(getAgentMessages());
     } finally {
       setStreaming("");
       setLoading(false);
+      scrollToEnd();
     }
   }
+
+  function clearConversation() {
+    clearAgentMessages();
+    setMessages([]);
+  }
+
+  const empty = messages.length === 0 && !loading;
 
   return (
     <KeyboardAvoidingView
       style={styles.root}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 8 : 0}
     >
-      <Text style={styles.h1}>Recall</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.h1}>Agent</Text>
+        {messages.length > 0 && (
+          <Pressable onPress={clearConversation} hitSlop={8}>
+            <Text style={styles.clearText}>Clear</Text>
+          </Pressable>
+        )}
+      </View>
 
       <ScrollView
+        ref={scrollRef}
         style={styles.scroll}
-        contentContainerStyle={[styles.scrollContent, !asked && !result && styles.scrollEmpty]}
+        contentContainerStyle={[styles.scrollContent, empty && styles.scrollEmpty]}
         keyboardShouldPersistTaps="handled"
+        onContentSizeChange={scrollToEnd}
       >
-        {!asked && !result && (
+        {empty && (
           <EmptyState>
-            Recall anything from your recorded mems. Answers come only from what you've recorded —
+            Ask your second brain. The agent searches your recorded mems and action items to answer —
             fully on-device.
           </EmptyState>
         )}
-        {asked !== "" && (
-          <View style={styles.userBubble}>
-            <Text style={styles.userText}>{asked}</Text>
-          </View>
+
+        {messages.map((m) =>
+          m.role === "user" ? (
+            <View key={m.id} style={styles.userBubble}>
+              <Text style={styles.userText}>{m.content}</Text>
+            </View>
+          ) : (
+            <View key={m.id}>
+              <GlassCard>
+                <View style={styles.toolChip}>
+                  <Ionicons
+                    name={m.usedTool === "list_todos" ? "checkbox-outline" : "search-outline"}
+                    size={12}
+                    color={theme.color.accent}
+                  />
+                  <Text style={styles.toolChipText}>
+                    {m.usedTool === "list_todos" ? "Action items" : "Memory search"}
+                  </Text>
+                </View>
+                <Text style={styles.body}>{m.content}</Text>
+              </GlassCard>
+              {m.citations.map((c, i) => (
+                <GlassCard key={`${m.id}-${i}`}>
+                  <Text style={styles.cite}>{c.meetingTitle}</Text>
+                  <Text style={styles.citeText} numberOfLines={3}>
+                    {c.text}
+                  </Text>
+                </GlassCard>
+              ))}
+            </View>
+          )
         )}
+
         {loading && streaming === "" && (
           <ActivityIndicator color={theme.color.accent} style={{ marginTop: theme.space.md }} />
         )}
@@ -71,31 +141,6 @@ export function AskScreen() {
             <Text style={styles.body}>{streaming}</Text>
           </GlassCard>
         )}
-        {result && (
-          <>
-            <GlassCard>
-              <View style={styles.toolChip}>
-                <Ionicons
-                  name={result.usedTool === "list_todos" ? "checkbox-outline" : "search-outline"}
-                  size={12}
-                  color={theme.color.accent}
-                />
-                <Text style={styles.toolChipText}>
-                  {result.usedTool === "list_todos" ? "Action items" : "Memory search"}
-                </Text>
-              </View>
-              <Text style={styles.body}>{result.answer}</Text>
-            </GlassCard>
-            {result.citations.map((c, i) => (
-              <GlassCard key={i}>
-                <Text style={styles.cite}>{c.meetingTitle}</Text>
-                <Text style={styles.citeText} numberOfLines={3}>
-                  {c.text}
-                </Text>
-              </GlassCard>
-            ))}
-          </>
-        )}
       </ScrollView>
 
       <View style={styles.inputBar}>
@@ -103,7 +148,7 @@ export function AskScreen() {
           style={styles.input}
           value={q}
           onChangeText={setQ}
-          placeholder="Ask about your mems…"
+          placeholder="Ask your second brain…"
           placeholderTextColor={theme.color.textMuted}
           onSubmitEditing={run}
           returnKeyType="send"
@@ -119,7 +164,14 @@ export function AskScreen() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: theme.color.bg, paddingTop: theme.space.xl },
-  h1: { color: theme.color.text, ...theme.type.display, paddingHorizontal: theme.space.md },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: theme.space.md,
+  },
+  h1: { color: theme.color.text, ...theme.type.display },
+  clearText: { color: theme.color.textMuted, ...theme.type.body, fontWeight: "600" },
   scroll: { flex: 1 },
   scrollContent: { padding: theme.space.md, gap: theme.space.md },
   scrollEmpty: { flexGrow: 1 },
